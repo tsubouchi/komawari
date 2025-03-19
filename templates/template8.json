@@ -1,0 +1,34 @@
+{
+  "title": "Z字型レイアウト",
+  "description": "Z字型に配置された4コマレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 60,
+      "height": 40
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 60,
+      "width": 40,
+      "height": 40
+    },
+    {
+      "id": "panel3",
+      "top": 40,
+      "left": 0,
+      "width": 40,
+      "height": 60
+    },
+    {
+      "id": "panel4",
+      "top": 40,
+      "left": 40,
+      "width": 60,
+      "height": 60
+    }
+  ]
+} 

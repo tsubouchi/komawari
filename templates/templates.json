@@ -1,0 +1,64 @@
+{
+  "templates": [
+    {
+      "id": "template1",
+      "title": "標準4コマ",
+      "description": "標準的な上下2段の4コマレイアウト",
+      "thumbnail": "thumbnails/template1.png"
+    },
+    {
+      "id": "template2",
+      "title": "縦4コマ",
+      "description": "縦に並んだ伝統的な4コマレイアウト",
+      "thumbnail": "thumbnails/template2.png"
+    },
+    {
+      "id": "template3",
+      "title": "大小混合",
+      "description": "左側に大きなコマ、右側に3つの小さなコマ",
+      "thumbnail": "thumbnails/template3.png"
+    },
+    {
+      "id": "template4",
+      "title": "ダイナミックレイアウト",
+      "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
+      "thumbnail": "thumbnails/template4.png"
+    },
+    {
+      "id": "template5",
+      "title": "横4コマ",
+      "description": "横に並んだ4コマレイアウト",
+      "thumbnail": "thumbnails/template5.png"
+    },
+    {
+      "id": "template6",
+      "title": "階段レイアウト",
+      "description": "階段状に配置された4コマレイアウト",
+      "thumbnail": "thumbnails/template6.png"
+    },
+    {
+      "id": "template7",
+      "title": "T字型レイアウト",
+      "description": "T字型に配置された4コマレイアウト",
+      "thumbnail": "thumbnails/template7.png"
+    },
+    {
+      "id": "template8",
+      "title": "Z字型レイアウト",
+      "description": "Z字型に配置された4コマレイアウト",
+      "thumbnail": "thumbnails/template8.png"
+    },
+    {
+      "id": "template9",
+      "title": "中央フォーカス",
+      "description": "中央に大きなコマを配置した4コマレイアウト",
+      "thumbnail": "thumbnails/template9.png"
+    },
+    {
+      "id": "template10",
+      "title": "十字型レイアウト",
+      "description": "十字型に配置された4コマレイアウト",
+      "thumbnail": "thumbnails/template10.png"
+    }
+  ]
+} 

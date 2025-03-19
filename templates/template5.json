@@ -1,0 +1,34 @@
+{
+  "title": "横4コマ",
+  "description": "横に並んだ4コマレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 25,
+      "height": 100
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 25,
+      "width": 25,
+      "height": 100
+    },
+    {
+      "id": "panel3",
+      "top": 0,
+      "left": 50,
+      "width": 25,
+      "height": 100
+    },
+    {
+      "id": "panel4",
+      "top": 0,
+      "left": 75,
+      "width": 25,
+      "height": 100
+    }
+  ]
+} 

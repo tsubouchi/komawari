@@ -1,0 +1,34 @@
+{
+  "title": "中央フォーカス",
+  "description": "中央に大きなコマを配置した4コマレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 40,
+      "height": 40
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 40,
+      "width": 60,
+      "height": 70
+    },
+    {
+      "id": "panel3",
+      "top": 40,
+      "left": 0,
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "panel4",
+      "top": 70,
+      "left": 0,
+      "width": 100,
+      "height": 30
+    }
+  ]
+} 
