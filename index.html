@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>漫画コマ枠エディター</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .panel-selector {
+      display: flex;
+      align-items: center;
+    }
+    
+    .panel-selector label {
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    
+    .image-selector {
+      display: flex;
+      align-items: center;
+    }
+    
+    .image-selector label {
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    
+    select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      background-color: white;
+      font-size: 16px;
+    }
+    
+    button {
+      padding: 8px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .export-btn {
+      background-color: #2196F3;
+    }
+    
+    .export-btn:hover {
+      background-color: #0b7dda;
+    }
+    
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    .loading-text {
+      color: white;
+      font-size: 18px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .manga-container {
+      width: 100%;
+      height: 800px;
+      background-color: white;
+      border: 1px solid #333;
+      position: relative;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .panel {
+      position: absolute;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 2px solid #000;
+      box-sizing: border-box;
+    }
+    
+    .panel.selected {
+      border: 2px dashed #ff0000;
+    }
+    
+    /* 各パネルの位置とサイズ */
+    #panel1 {
+      top: 0;
+      left: 0;
+      width: 40%;
+      height: 70%;
+    }
+    
+    #panel2 {
+      top: 0;
+      left: 40%;
+      width: 60%;
+      height: 35%;
+    }
+    
+    #panel3 {
+      top: 35%;
+      left: 40%;
+      width: 60%;
+      height: 35%;
+    }
+    
+    #panel4 {
+      top: 70%;
+      left: 0;
+      width: 100%;
+      height: 30%;
+    }
+    
+    .image-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-item {
+      text-align: center;
+    }
+    
+    .preview-image {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border: 1px solid #ddd;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    
+    .preview-image:hover {
+      border-color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">画像を生成中...</div>
+  </div>
+  
+  <div class="container">
+    <h1>漫画コマ枠エディター</h1>
+    
+    <div class="controls">
+      <div class="panel-selector">
+        <label for="panel-select">コマを選択:</label>
+        <select id="panel-select">
+          <option value="panel1">コマ1（左上）</option>
+          <option value="panel2">コマ2（右上）</option>
+          <option value="panel3">コマ3（右中）</option>
+          <option value="panel4">コマ4（下部）</option>
+        </select>
+      </div>
+      
+      <div class="image-selector">
+        <label for="image-select">画像を選択:</label>
+        <select id="image-select">
+          <option value="">画像なし</option>
+          <option value="1.png">1.png</option>
+          <option value="2.png">2.png</option>
+          <option value="3.png">3.png</option>
+          <option value="4.png">4.png</option>
+          <option value="5.png">5.png</option>
+        </select>
+        <button id="apply-btn">適用</button>
+        <button id="reset-btn">リセット</button>
+        <button id="export-btn" class="export-btn">PNG出力</button>
+      </div>
+    </div>
+    
+    <div class="manga-container">
+      <div id="panel1" class="panel selected"></div>
+      <div id="panel2" class="panel"></div>
+      <div id="panel3" class="panel"></div>
+      <div id="panel4" class="panel"></div>
+    </div>
+    
+    <div class="image-preview">
+      <div class="preview-item">
+        <img src="/api/placeholder/100/100" alt="1.png" class="preview-image" data-image="1.png">
+        <div>1.png</div>
+      </div>
+      <div class="preview-item">
+        <img src="/api/placeholder/100/100" alt="2.png" class="preview-image" data-image="2.png">
+        <div>2.png</div>
+      </div>
+      <div class="preview-item">
+        <img src="/api/placeholder/100/100" alt="3.png" class="preview-image" data-image="3.png">
+        <div>3.png</div>
+      </div>
+      <div class="preview-item">
+        <img src="/api/placeholder/100/100" alt="4.png" class="preview-image" data-image="4.png">
+        <div>4.png</div>
+      </div>
+      <div class="preview-item">
+        <img src="/api/placeholder/100/100" alt="5.png" class="preview-image" data-image="5.png">
+        <div>5.png</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 要素の取得
+      const panelSelect = document.getElementById('panel-select');
+      const imageSelect = document.getElementById('image-select');
+      const applyBtn = document.getElementById('apply-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const exportBtn = document.getElementById('export-btn');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const panels = document.querySelectorAll('.panel');
+      const previewImages = document.querySelectorAll('.preview-image');
+      
+      // 現在選択されているパネル
+      let currentPanel = document.getElementById('panel1');
+      
+      // パネル選択時の処理
+      panelSelect.addEventListener('change', function() {
+        // 以前の選択を解除
+        currentPanel.classList.remove('selected');
+        
+        // 新しいパネルを選択
+        const panelId = this.value;
+        currentPanel = document.getElementById(panelId);
+        currentPanel.classList.add('selected');
+        
+        // 選択されているパネルの背景画像があれば、その画像をセレクトボックスで選択
+        const backgroundImage = currentPanel.style.backgroundImage;
+        if (backgroundImage) {
+          const imageName = backgroundImage.split('/').pop().replace('")', '');
+          imageSelect.value = imageName;
+        } else {
+          imageSelect.value = '';
+        }
+      });
+      
+      // 画像適用ボタンの処理
+      applyBtn.addEventListener('click', function() {
+        const selectedImage = imageSelect.value;
+        if (selectedImage) {
+          currentPanel.style.backgroundImage = `url(${selectedImage})`;
+        } else {
+          currentPanel.style.backgroundImage = 'none';
+        }
+      });
+      
+      // リセットボタンの処理
+      resetBtn.addEventListener('click', function() {
+        panels.forEach(panel => {
+          panel.style.backgroundImage = 'none';
+        });
+        imageSelect.value = '';
+      });
+      
+      // パネルをクリックしたときの処理
+      panels.forEach(panel => {
+        panel.addEventListener('click', function() {
+          // 以前の選択を解除
+          currentPanel.classList.remove('selected');
+          
+          // 新しいパネルを選択
+          currentPanel = this;
+          currentPanel.classList.add('selected');
+          
+          // セレクトボックスの値を更新
+          panelSelect.value = currentPanel.id;
+          
+          // 背景画像があれば、その画像をセレクトボックスで選択
+          const backgroundImage = currentPanel.style.backgroundImage;
+          if (backgroundImage) {
+            const imageName = backgroundImage.split('/').pop().replace('")', '');
+            imageSelect.value = imageName;
+          } else {
+            imageSelect.value = '';
+          }
+        });
+      });
+      
+      // プレビュー画像クリック時の処理
+      previewImages.forEach(img => {
+        img.addEventListener('click', function() {
+          const imageName = this.dataset.image;
+          imageSelect.value = imageName;
+          currentPanel.style.backgroundImage = `url(${imageName})`;
+        });
+      });
+      
+      // PNG出力ボタンの処理
+      exportBtn.addEventListener('click', function() {
+        // ローディングオーバーレイを表示
+        loadingOverlay.style.display = 'flex';
+        
+        // 少し遅延させてUIの更新を確実に
+        setTimeout(() => {
+          // 漫画コンテナを取得
+          const mangaContainer = document.querySelector('.manga-container');
+          
+          // 選択クラスを一時的に削除
+          const selectedPanel = document.querySelector('.panel.selected');
+          if (selectedPanel) {
+            selectedPanel.classList.remove('selected');
+          }
+          
+          // html2canvasを使用して漫画コンテナをキャプチャ
+          html2canvas(mangaContainer, {
+            backgroundColor: "#ffffff",
+            scale: 2, // 高解像度化
+            logging: false,
+            useCORS: true, // 画像読み込みのためのCORS対応
+          }).then(canvas => {
+            // 選択クラスを戻す
+            if (selectedPanel) {
+              selectedPanel.classList.add('selected');
+            }
+            
+            // canvasをPNG形式に変換
+            const imgData = canvas.toDataURL('image/png');
+            
+            // ダウンロードリンクを作成
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = 'manga-panel-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.png';
+            
+            // リンクをクリックしてダウンロード開始
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // ローディングオーバーレイを非表示
+            loadingOverlay.style.display = 'none';
+          }).catch(error => {
+            console.error('画像の出力に失敗しました:', error);
+            alert('画像の出力に失敗しました。詳細はコンソールを確認してください。');
+            loadingOverlay.style.display = 'none';
+          });
+        }, 100);
+      });
+    });
+  </script>
+</body>
+</html>
