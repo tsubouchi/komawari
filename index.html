@@ -1282,11 +1282,45 @@
           panels.forEach(panel => {
             // パネルのスタイル情報を取得
             const style = window.getComputedStyle(panel);
-            const top = parseFloat(style.top) / style.width * 100;
-            const left = parseFloat(style.left) / style.width * 100;
-            const width = parseFloat(style.width) / style.width * 100;
-            const height = parseFloat(style.height) / style.width * 100;
+            const top = parseFloat(style.top) / parseFloat(style.width) * 100;
+            const left = parseFloat(style.left) / parseFloat(style.width) * 100;
+            const width = parseFloat(style.width) / parseFloat(style.width) * 100;
+            const height = parseFloat(style.height) / parseFloat(style.width) * 100;
             const clipPath = panel.style.clipPath;
+            
+            // コンソールでデバッグ出力
+            console.log(`パネル ${panel.id} のスタイル情報:`, 
+              { 
+                raw: { top: style.top, left: style.left, width: style.width, height: style.height },
+                parsed: { top, left, width, height }
+              }
+            );
+            
+            // NaNチェック - 計算が失敗した場合はデータ属性から取得
+            let validTop = isNaN(top) ? parseFloat(panel.dataset.top) : top;
+            let validLeft = isNaN(left) ? parseFloat(panel.dataset.left) : left;
+            let validWidth = isNaN(width) ? parseFloat(panel.dataset.width) : width;
+            let validHeight = isNaN(height) ? parseFloat(panel.dataset.height) : height;
+            
+            // %記号が含まれている場合は削除
+            validTop = validTop.toString().replace('%', '');
+            validLeft = validLeft.toString().replace('%', '');
+            validWidth = validWidth.toString().replace('%', '');
+            validHeight = validHeight.toString().replace('%', '');
+            
+            // 数値に変換
+            validTop = parseFloat(validTop);
+            validLeft = parseFloat(validLeft);
+            validWidth = parseFloat(validWidth);
+            validHeight = parseFloat(validHeight);
+            
+            // さらにNaNチェック - それでも失敗した場合はデフォルト値を使用
+            if (isNaN(validTop)) validTop = 0;
+            if (isNaN(validLeft)) validLeft = 0;
+            if (isNaN(validWidth)) validWidth = 25;
+            if (isNaN(validHeight)) validHeight = 25;
+            
+            console.log(`パネル ${panel.id} の有効な座標:`, { validTop, validLeft, validWidth, validHeight });
             
             // パネル用のグループ要素
             const g = document.createElementNS(svgNS, "g");
@@ -1300,8 +1334,8 @@
               clipPathValue.split(",").forEach(point => {
                 const trimmedPoint = point.trim();
                 const parts = trimmedPoint.split(" ");
-                const x = parseFloat(parts[0]) * width / 100 + left;
-                const y = parseFloat(parts[1]) * height / 100 + top;
+                const x = parseFloat(parts[0]) * validWidth / 100 + validLeft;
+                const y = parseFloat(parts[1]) * validHeight / 100 + validTop;
                 points.push(`${x},${y}`);
               });
               
@@ -1329,18 +1363,18 @@
                 // 画像を追加
                 const svgImage = document.createElementNS(svgNS, "image");
                 svgImage.setAttributeNS(xlinkNS, "href", img.src);
-                svgImage.setAttribute("x", left);
-                svgImage.setAttribute("y", top);
-                svgImage.setAttribute("width", width);
-                svgImage.setAttribute("height", height);
+                svgImage.setAttribute("x", validLeft);
+                svgImage.setAttribute("y", validTop);
+                svgImage.setAttribute("width", validWidth);
+                svgImage.setAttribute("height", validHeight);
                 svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
                 svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
                 g.appendChild(svgImage);
                 
                 // パネル番号を表示（左上に小さく）
                 const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", left + 2);  // 左上に配置
-                text.setAttribute("y", top + 4);   // 少し下に調整
+                text.setAttribute("x", validLeft + 2);  // 左上に配置
+                text.setAttribute("y", validTop + 4);   // 少し下に調整
                 text.setAttribute("fill", "red");
                 text.setAttribute("font-size", "2");
                 text.setAttribute("text-anchor", "start");
@@ -1350,10 +1384,10 @@
             } else {
               // 通常の矩形パネル
               const rect = document.createElementNS(svgNS, "rect");
-              rect.setAttribute("x", left);
-              rect.setAttribute("y", top);
-              rect.setAttribute("width", width);
-              rect.setAttribute("height", height);
+              rect.setAttribute("x", validLeft);
+              rect.setAttribute("y", validTop);
+              rect.setAttribute("width", validWidth);
+              rect.setAttribute("height", validHeight);
               rect.setAttribute("fill", "white");
               rect.setAttribute("stroke", "black");
               rect.setAttribute("stroke-width", "0.2");
@@ -1365,17 +1399,17 @@
                 // 画像を追加
                 const svgImage = document.createElementNS(svgNS, "image");
                 svgImage.setAttributeNS(xlinkNS, "href", img.src);
-                svgImage.setAttribute("x", left);
-                svgImage.setAttribute("y", top);
-                svgImage.setAttribute("width", width);
-                svgImage.setAttribute("height", height);
+                svgImage.setAttribute("x", validLeft);
+                svgImage.setAttribute("y", validTop);
+                svgImage.setAttribute("width", validWidth);
+                svgImage.setAttribute("height", validHeight);
                 svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
                 g.appendChild(svgImage);
                 
                 // パネル番号を表示（左上に小さく）
                 const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", left + 2);  // 左上に配置
-                text.setAttribute("y", top + 4);   // 少し下に調整
+                text.setAttribute("x", validLeft + 2);  // 左上に配置
+                text.setAttribute("y", validTop + 4);   // 少し下に調整
                 text.setAttribute("fill", "red");
                 text.setAttribute("font-size", "2");
                 text.setAttribute("text-anchor", "start");
