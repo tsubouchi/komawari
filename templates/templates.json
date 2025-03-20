@@ -4,91 +4,91 @@
       "id": "template1",
       "title": "標準4コマ",
       "description": "標準的な上下2段の4コマレイアウト",
-      "thumbnail": "thumbnails/template1.png"
+      "thumbnail": "thumbnails/1.png"
     },
     {
       "id": "template2",
       "title": "縦4コマ",
       "description": "縦に並んだ伝統的な4コマレイアウト",
-      "thumbnail": "thumbnails/template2.png"
+      "thumbnail": "thumbnails/2.png"
     },
     {
       "id": "template3",
       "title": "大小混合",
       "description": "左側に大きなコマ、右側に3つの小さなコマ",
-      "thumbnail": "thumbnails/template3.png"
+      "thumbnail": "thumbnails/3.png"
     },
     {
       "id": "template4",
       "title": "ダイナミックレイアウト",
       "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
-      "thumbnail": "thumbnails/template4.png"
+      "thumbnail": "thumbnails/4.png"
     },
     {
       "id": "template5",
       "title": "横4コマ",
       "description": "横に並んだ4コマレイアウト",
-      "thumbnail": "thumbnails/template5.png"
+      "thumbnail": "thumbnails/5.png"
     },
     {
       "id": "template6",
       "title": "階段レイアウト",
       "description": "階段状に配置された4コマレイアウト",
-      "thumbnail": "thumbnails/template6.png"
+      "thumbnail": "thumbnails/6.png"
     },
     {
       "id": "template7",
       "title": "T字型レイアウト",
       "description": "T字型に配置された4コマレイアウト",
-      "thumbnail": "thumbnails/template7.png"
+      "thumbnail": "thumbnails/7.png"
     },
     {
       "id": "template8",
       "title": "Z字型レイアウト",
       "description": "Z字型に配置された4コマレイアウト",
-      "thumbnail": "thumbnails/template8.png"
+      "thumbnail": "thumbnails/8.png"
     },
     {
       "id": "template9",
       "title": "中央フォーカス",
       "description": "中央に大きなコマを配置した4コマレイアウト",
-      "thumbnail": "thumbnails/template9.png"
+      "thumbnail": "thumbnails/9.png"
     },
     {
       "id": "template10",
       "title": "十字型レイアウト",
       "description": "十字型に配置された4コマレイアウト",
-      "thumbnail": "thumbnails/template10.png"
+      "thumbnail": "thumbnails/10.png"
     },
     {
       "id": "template11",
       "title": "斜め分割",
       "description": "右上から左下への斜め線で分割された4コマレイアウト",
-      "thumbnail": "thumbnails/template11.png"
+      "thumbnail": "thumbnails/11.png"
     },
     {
       "id": "template12",
       "title": "台形メイン",
       "description": "大きな台形コマを中心にしたレイアウト",
-      "thumbnail": "thumbnails/template12.png"
+      "thumbnail": "thumbnails/12.png"
     },
     {
       "id": "template13",
       "title": "ジグザグレイアウト",
       "description": "ジグザグに配置された4コマレイアウト",
-      "thumbnail": "thumbnails/template13.png"
+      "thumbnail": "thumbnails/13.png"
     },
     {
       "id": "template14",
       "title": "放射状レイアウト",
       "description": "中心から放射状に広がる4コマレイアウト",
-      "thumbnail": "thumbnails/template14.png"
+      "thumbnail": "thumbnails/14.png"
     },
     {
       "id": "template15",
       "title": "斜め波状レイアウト",
       "description": "斜めに波打つ線で区切られた4コマレイアウト",
-      "thumbnail": "thumbnails/template15.png"
+      "thumbnail": "thumbnails/15.png"
     }
   ]
 } 

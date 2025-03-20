@@ -4,12 +4,14 @@
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "templates/**/*.json", "use": "@vercel/static" },
+    { "src": "thumbnails/*.png", "use": "@vercel/static" },
     { "src": "server.js", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/", "dest": "/index.html" },
     { "src": "/(.+\\.png)", "dest": "/$1" },
     { "src": "/templates/(.+\\.json)", "dest": "/templates/$1" },
+    { "src": "/thumbnails/(.+\\.png)", "dest": "/thumbnails/$1" },
     { "src": "/(.*)", "dest": "/server.js" }
   ]
 } 
