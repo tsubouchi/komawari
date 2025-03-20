@@ -1,33 +1,33 @@
 {
-  "title": "階段レイアウト",
-  "description": "階段状に配置された4コマレイアウト",
+  "title": "Staircase Layout",
+  "description": "Four panels arranged in a staircase pattern",
   "panels": [
     {
       "id": "panel1",
       "top": 0,
       "left": 0,
-      "width": 75,
+      "width": 70,
       "height": 25
     },
     {
       "id": "panel2",
       "top": 25,
-      "left": 25,
-      "width": 75,
+      "left": 30,
+      "width": 70,
       "height": 25
     },
     {
       "id": "panel3",
       "top": 50,
       "left": 0,
-      "width": 75,
+      "width": 70,
       "height": 25
     },
     {
       "id": "panel4",
       "top": 75,
-      "left": 25,
-      "width": 75,
+      "left": 30,
+      "width": 70,
       "height": 25
     }
   ]
