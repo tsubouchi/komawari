@@ -8,12 +8,14 @@ const streamifier = require('streamifier');
 const multer = require('multer');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // tmp ディレクトリが存在しない場合は作成
-const tmpDir = path.join(__dirname, 'tmp');
+const tmpDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, 'tmp');
 if (!fs.existsSync(tmpDir)) {
   fs.mkdirSync(tmpDir, { recursive: true });
 }
@@ -47,6 +49,76 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// サーバー側でURLから画像をダウンロードする関数（httpとhttpsモジュールを使用）
+function downloadImage(url) {
+  return new Promise((resolve, reject) => {
+    console.log(`画像のダウンロード開始: ${url}`);
+    
+    // httpかhttpsかを判断
+    const client = url.startsWith('https') ? https : http;
+    
+    const request = client.get(url, (response) => {
+      // リダイレクトの処理
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const redirectUrl = response.headers.location;
+        console.log(`リダイレクト: ${url} -> ${redirectUrl}`);
+        if (redirectUrl) {
+          return downloadImage(redirectUrl).then(resolve).catch(reject);
+        }
+      }
+      
+      // エラーレスポンスの処理
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return reject(new Error(`画像のダウンロードに失敗しました: HTTPステータス ${response.statusCode}`));
+      }
+      
+      // 画像データのチャンクを集める
+      const chunks = [];
+      response.on('data', (chunk) => chunks.push(chunk));
+      
+      // データ受信完了時の処理
+      response.on('end', () => {
+        try {
+          // すべてのチャンクを結合して1つのバッファにする
+          const buffer = Buffer.concat(chunks);
+          
+          // 画像オブジェクトを作成
+          const img = new Image();
+          
+          // 画像の読み込み完了時とエラー時のハンドラを設定
+          img.onload = () => {
+            console.log(`画像の読み込み成功: ${url} (${img.width}x${img.height})`);
+            resolve(img);
+          };
+          
+          img.onerror = (err) => {
+            console.error(`画像の読み込みエラー: ${url}`, err);
+            reject(new Error(`画像の読み込みに失敗しました: ${err.message || 'Unknown error'}`));
+          };
+          
+          // バッファから直接読み込み
+          img.src = buffer;
+        } catch (error) {
+          console.error(`画像の処理中にエラー発生: ${url}`, error);
+          reject(error);
+        }
+      });
+    });
+    
+    // リクエストエラーの処理
+    request.on('error', (err) => {
+      console.error(`画像リクエストエラー: ${url}`, err);
+      reject(new Error(`画像のダウンロードリクエストに失敗しました: ${err.message}`));
+    });
+    
+    // タイムアウトの設定
+    request.setTimeout(10000, () => {
+      request.destroy();
+      reject(new Error(`画像のダウンロードがタイムアウトしました: ${url}`));
+    });
+  });
+}
+
 // SVGをPNGに変換するAPI
 app.post('/api/convert-svg', async (req, res) => {
   try {
@@ -58,6 +130,28 @@ app.post('/api/convert-svg', async (req, res) => {
     
     console.log('SVGデータを受信しました', svgData.substring(0, 100) + '...');
     console.log('画像URL一覧:', imageUrls);
+    
+    // デバッグモードの場合はSVGを直接保存
+    const debugMode = req.query.debug === 'true';
+    if (debugMode) {
+      console.log('デバッグモード: SVGデータを直接保存します');
+      
+      // ファイル名の生成
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const svgFileName = `${title}-${timestamp}.svg`;
+      const svgFilePath = path.join(tmpDir, svgFileName);
+      
+      // SVGファイルに保存
+      fs.writeFileSync(svgFilePath, svgData, 'utf8');
+      
+      // SVGダウンロードURLを返す
+      return res.json({
+        success: true,
+        message: 'SVGファイルを保存しました',
+        downloadUrl: `/tmp/${svgFileName}`,
+        fileName: svgFileName
+      });
+    }
     
     // ファイル名の生成
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -72,6 +166,20 @@ app.post('/api/convert-svg', async (req, res) => {
     // 白背景で塗りつぶし
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 画像URLをキャッシュ
+    const imageCache = {};
+    
+    // 受信した画像URLを事前にダウンロードしてキャッシュ
+    for (const url of imageUrls) {
+      try {
+        const img = await downloadImage(url);
+        imageCache[url] = img;
+        console.log(`画像をキャッシュしました: ${url}`);
+      } catch (error) {
+        console.error(`画像のキャッシュに失敗: ${url}`, error);
+      }
+    }
     
     // 各パネルの情報を抽出
     const panelRegex = /<g>[\s\S]*?<\/g>/g;
@@ -106,31 +214,115 @@ app.post('/api/convert-svg', async (req, res) => {
         console.log(`パネル ${i+1} の画像情報:`, { x, y, width, height, imageUrl });
         
         try {
-          // 画像URLをデコード
-          if (imageUrl.startsWith('data:')) {
-            // データURLの場合はそのまま使用
-          } else if (imageUrl.startsWith('http')) {
-            // 絶対URLの場合はそのまま使用
+          let img = null;
+          
+          // キャッシュから画像を取得
+          if (imageCache[imageUrl]) {
+            img = imageCache[imageUrl];
+            console.log(`キャッシュから画像を使用: ${imageUrl}`);
           } else {
-            // 相対パスの場合は修正
-            if (!imageUrl.startsWith('/')) {
-              imageUrl = '/' + imageUrl;
+            // 画像URLの解決（相対パスを絶対URLに変換）
+            let baseUrl;
+            if (process.env.VERCEL) {
+              // Vercel環境ではリクエストヘッダーからホスト名を取得
+              const host = req.headers.host || 'komawari.vercel.app';
+              const protocol = req.headers['x-forwarded-proto'] || 'https';
+              baseUrl = `${protocol}://${host}`;
+              console.log(`Vercel環境でのベースURL: ${baseUrl}`);
+            } else {
+              // ローカル環境
+              baseUrl = `http://localhost:${PORT}`;
             }
-            imageUrl = `http://localhost:${PORT}${imageUrl}`;
+            
+            // クライアントから受け取った画像URLリストから該当する画像を探す
+            const decodedImageUrl = decodeURIComponent(imageUrl);
+            const imageName = decodedImageUrl.split('/').pop(); // URLの最後の部分（ファイル名）を取得
+            console.log(`画像名: ${imageName}`);
+            
+            // 受信したimageUrlsからマッチするURLを検索
+            let matchedUrl = null;
+            for (const url of imageUrls) {
+              if (url.includes(imageName)) {
+                matchedUrl = url;
+                console.log(`画像URLがマッチしました: ${url}`);
+                break;
+              }
+            }
+            
+            if (matchedUrl) {
+              // 既にフルURLが見つかった場合はそれを使用
+              imageUrl = matchedUrl;
+            } else {
+              // フルURLが見つからなかった場合はベースURLから構築
+              if (imageUrl.startsWith('/')) {
+                imageUrl = `${baseUrl}${imageUrl}`;
+              } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+                imageUrl = `${baseUrl}/${imageName}`;
+              }
+            }
+            
+            console.log(`解決された画像URL: ${imageUrl}`);
+            
+            // 画像をダウンロード
+            try {
+              img = await downloadImage(imageUrl);
+              imageCache[imageUrl] = img; // キャッシュに追加
+            } catch (imgError) {
+              console.error(`画像のダウンロードに失敗: ${imageUrl}`, imgError);
+              continue; // このパネルの画像処理をスキップ
+            }
           }
           
-          // 画像の読み込み
-          const img = new Image();
-          const loadImagePromise = new Promise((resolve, reject) => {
-            img.onload = () => resolve(img);
-            img.onerror = (e) => {
-              console.error(`画像読み込みエラー: ${imageUrl}`, e);
-              reject(new Error(`画像の読み込みに失敗しました: ${imageUrl}`));
-            };
-          });
+          if (!img) {
+            console.error(`画像の取得に失敗: ${imageUrl}`);
+            // 代わりにテストパターンを描画
+            ctx.save();
+            if (polygonMatch || rectMatch) {
+              ctx.beginPath();
+              
+              if (polygonMatch) {
+                const points = polygonMatch[1].split(' ').map(point => {
+                  const [x, y] = point.split(',');
+                  return [parseFloat(x) * CANVAS_SIZE / 100, parseFloat(y) * CANVAS_SIZE / 100];
+                });
+                
+                if (points.length > 0) {
+                  ctx.moveTo(points[0][0], points[0][1]);
+                  for (let j = 1; j < points.length; j++) {
+                    ctx.lineTo(points[j][0], points[j][1]);
+                  }
+                  ctx.closePath();
+                }
+              } else if (rectMatch) {
+                const rectX = parseFloat(rectMatch[1]) * CANVAS_SIZE / 100;
+                const rectY = parseFloat(rectMatch[2]) * CANVAS_SIZE / 100;
+                const rectWidth = parseFloat(rectMatch[3]) * CANVAS_SIZE / 100;
+                const rectHeight = parseFloat(rectMatch[4]) * CANVAS_SIZE / 100;
+                ctx.rect(rectX, rectY, rectWidth, rectHeight);
+              }
+              
+              ctx.clip();
+              
+              // テストパターン描画
+              ctx.fillStyle = '#f0f0f0';
+              ctx.fillRect(x, y, width, height);
+              
+              // 枠線とデバッグ情報
+              ctx.strokeStyle = 'black';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              
+              // パネル番号を表示
+              ctx.fillStyle = 'red';
+              ctx.font = '32px Arial';
+              ctx.fillText(`パネル ${i+1} (画像なし)`, x + 10, y + 40);
+            }
+            ctx.restore();
+            continue;
+          }
           
-          img.src = imageUrl;
-          await loadImagePromise;
+          console.log(`画像の元サイズ: ${img.width}x${img.height}`);
+          console.log(`描画サイズと位置: x=${x}, y=${y}, width=${width}, height=${height}`);
           
           // 画像のクリッピングパスの処理
           if (polygonMatch) {
@@ -155,12 +347,31 @@ app.post('/api/convert-svg', async (req, res) => {
               ctx.closePath();
               ctx.clip();
               
-              // クリッピングパスの内側に画像を描画
-              ctx.drawImage(img, x, y, width, height);
+              // クリッピングパスの内側に画像を描画（アスペクト比を保ちながら）
+              const imgAspect = img.width / img.height;
+              const panelAspect = width / height;
               
-              // 多角形の境界線を描画（オプション）
+              let drawWidth, drawHeight, offsetX, offsetY;
+              
+              if (imgAspect > panelAspect) {
+                // 画像が横長の場合は高さに合わせる
+                drawHeight = height;
+                drawWidth = height * imgAspect;
+                offsetX = x + (width - drawWidth) / 2;
+                offsetY = y;
+              } else {
+                // 画像が縦長の場合は幅に合わせる
+                drawWidth = width;
+                drawHeight = width / imgAspect;
+                offsetX = x;
+                offsetY = y + (height - drawHeight) / 2;
+              }
+              
+              ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+              
+              // 多角形の境界線を描画
               ctx.strokeStyle = 'black';
-              ctx.lineWidth = 0.5;
+              ctx.lineWidth = 2;
               ctx.stroke();
               
               ctx.restore();
@@ -177,18 +388,56 @@ app.post('/api/convert-svg', async (req, res) => {
             ctx.rect(rectX, rectY, rectWidth, rectHeight);
             ctx.clip();
             
-            // クリッピングパスの内側に画像を描画
-            ctx.drawImage(img, x, y, width, height);
+            // クリッピングパスの内側に画像を描画（アスペクト比を保ちながら）
+            const imgAspect = img.width / img.height;
+            const panelAspect = rectWidth / rectHeight;
+            
+            let drawWidth, drawHeight, offsetX, offsetY;
+            
+            if (imgAspect > panelAspect) {
+              // 画像が横長の場合は高さに合わせる
+              drawHeight = rectHeight;
+              drawWidth = rectHeight * imgAspect;
+              offsetX = rectX + (rectWidth - drawWidth) / 2;
+              offsetY = rectY;
+            } else {
+              // 画像が縦長の場合は幅に合わせる
+              drawWidth = rectWidth;
+              drawHeight = rectWidth / imgAspect;
+              offsetX = rectX;
+              offsetY = rectY + (rectHeight - drawHeight) / 2;
+            }
+            
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
             
             // 長方形の境界線を描画
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 2;
             ctx.stroke();
             
             ctx.restore();
           } else {
-            // クリッピングパスがない場合は単純に画像を描画
-            ctx.drawImage(img, x, y, width, height);
+            // クリッピングパスがない場合も、アスペクト比を保ちながら描画
+            const imgAspect = img.width / img.height;
+            const panelAspect = width / height;
+            
+            let drawWidth, drawHeight, offsetX, offsetY;
+            
+            if (imgAspect > panelAspect) {
+              // 画像が横長の場合は高さに合わせる
+              drawHeight = height;
+              drawWidth = height * imgAspect;
+              offsetX = x + (width - drawWidth) / 2;
+              offsetY = y;
+            } else {
+              // 画像が縦長の場合は幅に合わせる
+              drawWidth = width;
+              drawHeight = width / imgAspect;
+              offsetX = x;
+              offsetY = y + (height - drawHeight) / 2;
+            }
+            
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           }
           
         } catch (imgError) {

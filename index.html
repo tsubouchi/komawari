@@ -1378,19 +1378,19 @@
               polygon.setAttribute("stroke-width", "0.2");
               g.appendChild(polygon);
               
+              // SVG用クリッピングパスを定義
+              const clipPathId = `clip_${panel.id}`;
+              const clipPathElement = document.createElementNS(svgNS, "clipPath");
+              clipPathElement.setAttribute("id", clipPathId);
+              
+              const clipPathPolygon = document.createElementNS(svgNS, "polygon");
+              clipPathPolygon.setAttribute("points", points.join(" "));
+              clipPathElement.appendChild(clipPathPolygon);
+              svg.appendChild(clipPathElement);
+              
               // 画像を取得
               const img = panel.querySelector('img');
               if (img) {
-                // SVG用クリッピングパスを定義
-                const clipPathId = `clip_${panel.id}`;
-                const clipPathElement = document.createElementNS(svgNS, "clipPath");
-                clipPathElement.setAttribute("id", clipPathId);
-                
-                const clipPathPolygon = document.createElementNS(svgNS, "polygon");
-                clipPathPolygon.setAttribute("points", points.join(" "));
-                clipPathElement.appendChild(clipPathPolygon);
-                svg.appendChild(clipPathElement);
-                
                 // 画像URLの解決（相対パスを絶対URLに変換）
                 let imgSrc = img.src;
                 // すでに絶対URLかどうかをチェック
@@ -1439,16 +1439,53 @@
               // 画像を取得
               const img = panel.querySelector('img');
               if (img) {
-                // 画像URLの解決（相対パスを絶対URLに変換）
+                // SVG用クリッピングパスを定義
+                const clipPathId = `clip_${panel.id}`;
+                const clipPathElement = document.createElementNS(svgNS, "clipPath");
+                clipPathElement.setAttribute("id", clipPathId);
+                
+                const clipPathPolygon = document.createElementNS(svgNS, "polygon");
+                clipPathPolygon.setAttribute("points", points.join(" "));
+                clipPathElement.appendChild(clipPathPolygon);
+                svg.appendChild(clipPathElement);
+                
+                // 画像URLの解決と変換（できるだけデータURLに変換）
                 let imgSrc = img.src;
-                // すでに絶対URLかどうかをチェック
-                if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-                  // 相対パスを絶対URLに変換
+                
+                // 既にデータURLならそのまま使う
+                if (imgSrc.startsWith('data:')) {
+                  console.log(`パネル ${panel.id} は既にデータURL形式です`);
+                } 
+                // 絶対URLの場合
+                else if (imgSrc.startsWith('http')) {
+                  console.log(`パネル ${panel.id} は絶対URL形式です: ${imgSrc}`);
+                  
+                  // Canvas APIを使って画像をデータURLに変換
+                  try {
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // 画像がロード済みの場合
+                    if (img.complete && img.naturalWidth > 0) {
+                      tempCanvas.width = img.naturalWidth;
+                      tempCanvas.height = img.naturalHeight;
+                      tempCtx.drawImage(img, 0, 0);
+                      imgSrc = tempCanvas.toDataURL('image/png');
+                      console.log(`パネル ${panel.id} の画像をデータURLに変換しました`);
+                    }
+                  } catch (e) {
+                    console.error(`パネル ${panel.id} の画像変換に失敗しました:`, e);
+                  }
+                } 
+                // 相対パスの場合は絶対URLに変換
+                else {
                   const a = document.createElement('a');
                   a.href = imgSrc;
                   imgSrc = a.href;
+                  console.log(`パネル ${panel.id} の相対パスを絶対URLに変換: ${imgSrc}`);
                 }
-                console.log(`パネル ${panel.id} の画像URL:`, imgSrc);
+                
+                console.log(`パネル ${panel.id} の最終画像URL:`, imgSrc);
                 
                 // 画像を追加
                 const svgImage = document.createElementNS(svgNS, "image");
@@ -1458,6 +1495,7 @@
                 svgImage.setAttribute("width", validWidth);
                 svgImage.setAttribute("height", validHeight);
                 svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
                 svgImage.setAttribute("crossorigin", "anonymous");
                 g.appendChild(svgImage);
                 
