@@ -1387,24 +1387,65 @@
             svg.appendChild(g);
           });
           
+          // デバッグ用：SVGの内容を確認
+          console.log('SVG要素:', svg);
+          
           // SVGを文字列に変換
           const svgData = new XMLSerializer().serializeToString(svg);
-          const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
-          const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+          console.log('SVG文字列データ:', svgData.substring(0, 150) + '...');
           
-          // SVGを画像に変換
+          // SVGデータを直接img要素のsrcに設定して表示テスト
+          const imgTest = document.createElement('img');
+          imgTest.setAttribute('style', 'position:fixed; top:10px; left:10px; width:200px; height:200px; z-index:9999; border:2px solid red; background:white;');
+          imgTest.onload = function() {
+            console.log('SVGテスト画像の読み込み成功');
+            setTimeout(() => document.body.removeChild(imgTest), 3000);
+          };
+          imgTest.onerror = function(e) {
+            console.error('SVGテスト画像の読み込み失敗:', e);
+          };
+          
+          // ダイレクトなSVG Data URLを使用
+          const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+          imgTest.src = svgDataUrl;
+          document.body.appendChild(imgTest);
+          
+          // SVGを画像に変換するための新しい手法を使用
           const img = new Image();
           img.onload = function() {
+            console.log('SVG画像の読み込み成功（サイズ：', img.width, 'x', img.height, '）');
+            
             // キャンバスに描画
             const canvas = document.createElement('canvas');
             canvas.width = CANVAS_SIZE;
             canvas.height = CANVAS_SIZE;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
+            
+            // キャンバスを白で塗りつぶし
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 画像描画
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // 描画結果を確認
+            console.log('キャンバス描画完了（サイズ：', canvas.width, 'x', canvas.height, '）');
             
             // PNG形式に変換
             try {
+              // キャンバスをデータURLに変換（PNG形式）
               const imgData = canvas.toDataURL('image/png');
+              console.log('PNG変換成功:', imgData.substring(0, 50) + '...');
+              
+              // デバッグ用：PNG出力のプレビュー表示
+              const pngTest = document.createElement('img');
+              pngTest.setAttribute('style', 'position:fixed; top:220px; left:10px; width:200px; height:200px; z-index:9999; border:2px solid blue; background:white;');
+              pngTest.onload = function() {
+                console.log('PNG画像プレビューの読み込み成功');
+                setTimeout(() => document.body.removeChild(pngTest), 3000);
+              };
+              pngTest.src = imgData;
+              document.body.appendChild(pngTest);
               
               // 保存
               const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -1433,7 +1474,11 @@
             loadingOverlay.style.display = 'none';
           };
           
-          img.src = svgDataUrl;
+          // Base64よりも信頼性の高いBlobURLを使用
+          const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+          const blobURL = URL.createObjectURL(svgBlob);
+          console.log('BlobURL生成：', blobURL);
+          img.src = blobURL;
           
         } catch (error) {
           console.error('処理中にエラーが発生しました:', error);
