@@ -1,0 +1,38 @@
+{
+  "title": "台形メイン",
+  "description": "大きな台形コマを中心にしたレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 35,
+      "height": 60,
+      "clipPath": "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 35,
+      "width": 65,
+      "height": 60,
+      "clipPath": "polygon(0 0, 100% 0, 85% 100%, 0 100%)"
+    },
+    {
+      "id": "panel3",
+      "top": 60,
+      "left": 0,
+      "width": 70,
+      "height": 40,
+      "clipPath": "polygon(0 0, 100% 0, 80% 100%, 0 100%)"
+    },
+    {
+      "id": "panel4",
+      "top": 60,
+      "left": 55,
+      "width": 45,
+      "height": 40,
+      "clipPath": "polygon(33% 0, 100% 0, 100% 100%, 0 100%)"
+    }
+  ]
+} 

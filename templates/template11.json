@@ -1,0 +1,38 @@
+{
+  "title": "斜め分割",
+  "description": "右上から左下への斜め線で分割された4コマレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 45,
+      "height": 65,
+      "clipPath": "polygon(0 0, 100% 0, 100% 80%, 0 100%)"
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 45,
+      "width": 55,
+      "height": 45,
+      "clipPath": "polygon(0 0, 100% 0, 100% 100%, 0 65%)"
+    },
+    {
+      "id": "panel3",
+      "top": 45,
+      "left": 45,
+      "width": 55,
+      "height": 30,
+      "clipPath": "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
+    },
+    {
+      "id": "panel4",
+      "top": 65,
+      "left": 0,
+      "width": 100,
+      "height": 35,
+      "clipPath": "polygon(0 0, 45% 0, 100% 0, 100% 100%, 0 100%)"
+    }
+  ]
+} 

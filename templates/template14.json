@@ -1,0 +1,38 @@
+{
+  "title": "放射状レイアウト",
+  "description": "中心から放射状に広がる4コマレイアウト",
+  "panels": [
+    {
+      "id": "panel1",
+      "top": 0,
+      "left": 0,
+      "width": 50,
+      "height": 50,
+      "clipPath": "polygon(0 0, 100% 0, 85% 100%, 0 85%)"
+    },
+    {
+      "id": "panel2",
+      "top": 0,
+      "left": 50,
+      "width": 50,
+      "height": 50,
+      "clipPath": "polygon(0 0, 100% 0, 100% 85%, 15% 100%)"
+    },
+    {
+      "id": "panel3",
+      "top": 50,
+      "left": 0,
+      "width": 50,
+      "height": 50,
+      "clipPath": "polygon(0 15%, 85% 0, 100% 100%, 0 100%)"
+    },
+    {
+      "id": "panel4",
+      "top": 50,
+      "left": 50,
+      "width": 50,
+      "height": 50,
+      "clipPath": "polygon(15% 0, 100% 15%, 100% 100%, 0 100%)"
+    }
+  ]
+} 

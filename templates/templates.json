@@ -59,6 +59,36 @@
       "title": "十字型レイアウト",
       "description": "十字型に配置された4コマレイアウト",
       "thumbnail": "thumbnails/template10.png"
+    },
+    {
+      "id": "template11",
+      "title": "斜め分割",
+      "description": "右上から左下への斜め線で分割された4コマレイアウト",
+      "thumbnail": "thumbnails/template11.png"
+    },
+    {
+      "id": "template12",
+      "title": "台形メイン",
+      "description": "大きな台形コマを中心にしたレイアウト",
+      "thumbnail": "thumbnails/template12.png"
+    },
+    {
+      "id": "template13",
+      "title": "ジグザグレイアウト",
+      "description": "ジグザグに配置された4コマレイアウト",
+      "thumbnail": "thumbnails/template13.png"
+    },
+    {
+      "id": "template14",
+      "title": "放射状レイアウト",
+      "description": "中心から放射状に広がる4コマレイアウト",
+      "thumbnail": "thumbnails/template14.png"
+    },
+    {
+      "id": "template15",
+      "title": "斜め波状レイアウト",
+      "description": "斜めに波打つ線で区切られた4コマレイアウト",
+      "thumbnail": "thumbnails/template15.png"
     }
   ]
 } 

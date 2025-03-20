@@ -848,6 +848,11 @@
             panelElement.style.backgroundSize = 'cover';
             panelElement.style.backgroundPosition = 'center';
             
+            // clipPathがある場合は適用
+            if (panel.clipPath) {
+              panelElement.style.clipPath = panel.clipPath;
+            }
+            
             // 位置情報をデータ属性として保存
             panelElement.dataset.top = `${panel.top}%`;
             panelElement.dataset.left = `${panel.left}%`;
@@ -938,6 +943,11 @@
           panelElement.style.height = `${panel.height}%`;
           panelElement.style.backgroundSize = 'cover';
           panelElement.style.backgroundPosition = 'center';
+          
+          // clipPathがある場合は適用
+          if (panel.clipPath) {
+            panelElement.style.clipPath = panel.clipPath;
+          }
           
           // 位置情報をデータ属性として保存
           panelElement.dataset.top = `${panel.top}%`;
