@@ -258,7 +258,24 @@
     .panel.selected::before {
       border: 2px dashed #ff0000;
     }
+
+    /* 各コマの色分け用スタイル */
+    .panel[id="panel1"] {
+      background-color: #e3f2fd; /* 薄い青 */
+    }
     
+    .panel[id="panel2"] {
+      background-color: #e8f5e9; /* 薄い緑 */
+    }
+    
+    .panel[id="panel3"] {
+      background-color: #fff3e0; /* 薄いオレンジ */
+    }
+    
+    .panel[id="panel4"] {
+      background-color: #f3e5f5; /* 薄い紫 */
+    }
+
     /* 各パネルの位置とサイズ */
     #panel1 {
       top: 0;
@@ -809,11 +826,7 @@
             // clipPathがある場合は適用
             if (panel.clipPath) {
               panelElement.style.clipPath = panel.clipPath;
-              // 台形などの特殊形状には薄い背景色を適用
-              panelElement.style.backgroundColor = '#e8eaf6';
-            } else {
-              // 通常のパネルには少し薄い色を適用
-              panelElement.style.backgroundColor = '#f5f5f5';
+              // 背景色は各パネルIDに基づいて自動的に設定されます（CSS側）
             }
             
             // 位置情報をデータ属性として保存
@@ -891,11 +904,7 @@
             // clipPathがある場合は適用
             if (panel.clipPath) {
               panelElement.style.clipPath = panel.clipPath;
-              // 台形などの特殊形状には薄い背景色を適用
-              panelElement.style.backgroundColor = '#e8eaf6';
-            } else {
-              // 通常のパネルには少し薄い色を適用
-              panelElement.style.backgroundColor = '#f5f5f5';
+              // 背景色は各パネルIDに基づいて自動的に設定されます（CSS側）
             }
             
             // 位置情報をデータ属性として保存
@@ -965,11 +974,7 @@
             // clipPathがある場合は適用
             if (panel.clipPath) {
               panelElement.style.clipPath = panel.clipPath;
-              // 台形などの特殊形状には薄い背景色を適用
-              panelElement.style.backgroundColor = '#e8eaf6';
-            } else {
-              // 通常のパネルには少し薄い色を適用
-              panelElement.style.backgroundColor = '#f5f5f5';
+              // 背景色は各パネルIDに基づいて自動的に設定されます（CSS側）
             }
             
             panelElement.dataset.top = `${panel.top}%`;
@@ -1239,264 +1244,200 @@
         loadingOverlay.style.display = 'flex';
         
         try {
-          // パネルの枠線を一時的に非表示にする
-          const panels = document.querySelectorAll('.panel');
-          const originalStyles = [];
-          
-          // 元のコンテナスタイルを保存
-          const containerRect = mangaContainer.getBoundingClientRect();
-          const containerOriginalStyles = {
-            width: mangaContainer.style.width,
-            height: mangaContainer.style.height,
-            position: mangaContainer.style.position,
-            border: mangaContainer.style.border
-          };
-          
-          // すべてのパネルの状態を保存
-          panels.forEach(panel => {
-            originalStyles.push({
-              element: panel,
-              border: panel.style.border,
-              selected: panel.classList.contains('selected'),
-              backgroundColor: panel.style.backgroundColor,
-              clipPath: panel.style.clipPath,
-              innerHTML: panel.innerHTML
-            });
-          });
-          
-          // キャプチャのために固定サイズに設定
-          const CANVAS_SIZE = 1000; // 固定サイズ（大きめに）
-          mangaContainer.style.width = CANVAS_SIZE + 'px';
-          mangaContainer.style.height = CANVAS_SIZE + 'px';
-          mangaContainer.style.position = 'relative';
-          mangaContainer.style.border = 'none';
-          
-          // テンプレート情報を取得
+          // 現在のテンプレート情報を取得
           const templateInfo = currentTemplate || {
             title: '漫画',
             panels: []
           };
           
-          console.log('出力開始: キャンバスサイズ', CANVAS_SIZE);
+          // SVGでコマ割りを完全に再現するための新しいアプローチ
+          const svgNS = "http://www.w3.org/2000/svg";
+          const xlinkNS = "http://www.w3.org/1999/xlink";
           
-          // 特殊処理：clipPathを持つパネルの枠線と形状を強化
-          panels.forEach((panel, index) => {
-            const panelHasClipPath = panel.style.clipPath && panel.style.clipPath !== 'none';
-            
-            // 選択状態を解除
-            panel.classList.remove('selected');
-            
-            if (panelHasClipPath) {
-              console.log(`パネル${index+1}はclipPathを持っています:`, panel.style.clipPath);
-              
-              // 元の内容を保存
-              const originalContent = panel.innerHTML;
-              const originalBackgroundImage = panel.style.backgroundImage;
-              const originalClipPath = panel.style.clipPath;
-              
-              // 枠線を非表示に
-              panel.style.border = 'none';
-              
-              // 画像コンテンツを取得
-              const img = panel.querySelector('img');
-              
-              // パネルの内容をクリア
-              panel.innerHTML = '';
-              
-              // 背景を透明に
-              panel.style.backgroundColor = 'transparent';
-              
-              if (img) {
-                // 1. まず画像要素を追加
-                const newImg = document.createElement('img');
-                newImg.src = img.src;
-                newImg.alt = img.alt;
-                newImg.style.position = 'absolute';
-                newImg.style.top = '0';
-                newImg.style.left = '0';
-                newImg.style.width = '100%';
-                newImg.style.height = '100%';
-                newImg.style.objectFit = 'cover';
-                newImg.style.zIndex = '1';
-                newImg.style.clipPath = originalClipPath;
-                panel.appendChild(newImg);
-                
-                // 表示名ラベルを追加
-                const label = document.createElement('div');
-                label.style.position = 'absolute';
-                label.style.bottom = '5px';
-                label.style.right = '5px';
-                label.style.backgroundColor = '#ff0000';
-                label.style.color = '#fff';
-                label.style.padding = '2px 5px';
-                label.style.fontSize = '10px';
-                label.style.zIndex = '3';
-                label.style.clipPath = 'none'; // ラベルはクリップしない
-                label.textContent = img.alt;
-                panel.appendChild(label);
-              } else if (originalBackgroundImage && originalBackgroundImage !== 'none') {
-                // 背景画像として設定されていた場合
-                const bgDiv = document.createElement('div');
-                bgDiv.style.position = 'absolute';
-                bgDiv.style.top = '0';
-                bgDiv.style.left = '0';
-                bgDiv.style.width = '100%';
-                bgDiv.style.height = '100%';
-                bgDiv.style.backgroundImage = originalBackgroundImage;
-                bgDiv.style.backgroundSize = 'cover';
-                bgDiv.style.backgroundPosition = 'center';
-                bgDiv.style.zIndex = '1';
-                bgDiv.style.clipPath = originalClipPath;
-                panel.appendChild(bgDiv);
-              }
-              
-              // 2. その上から枠線要素を追加
-              const border = document.createElement('div');
-              border.style.position = 'absolute';
-              border.style.top = '0';
-              border.style.left = '0';
-              border.style.width = '100%';
-              border.style.height = '100%';
-              border.style.border = '2px solid #000'; // 太めの枠線を使用
-              border.style.boxSizing = 'border-box';
-              border.style.zIndex = '2'; // 画像の上に表示
-              border.style.pointerEvents = 'none';
-              border.style.clipPath = originalClipPath;
-              panel.appendChild(border);
-              
-              // パネル番号を表示（デバッグ用）
-              const panelNum = document.createElement('div');
-              panelNum.style.position = 'absolute';
-              panelNum.style.top = '5px';
-              panelNum.style.right = '5px';
-              panelNum.style.color = 'red';
-              panelNum.style.fontWeight = 'bold';
-              panelNum.style.fontSize = '16px';
-              panelNum.style.zIndex = '3';
-              panelNum.textContent = panel.id.replace('panel', '');
-              panel.appendChild(panelNum);
-              
-              // コマの形状を保持するためのclipPath
-              panel.style.clipPath = 'none'; // パネル自体のclipPathは削除
-            } else {
-              // 通常のパネルは単に枠線を2pxの黒に変更
-              panel.style.border = '2px solid #000';
-            }
-          });
+          // キャンバスサイズ設定
+          const CANVAS_SIZE = 1000;
           
-          // html2canvasの設定
-          const h2cOptions = {
-            backgroundColor: "#ffffff",
-            scale: 2, // 高解像度にスケールアップ
-            logging: true,
-            useCORS: true,
-            allowTaint: true,
-            width: CANVAS_SIZE,
-            height: CANVAS_SIZE,
-            onclone: function(clonedDoc) {
-              console.log('クローン作成');
-              return clonedDoc;
-            }
-          };
+          // SVG要素を作成
+          const svg = document.createElementNS(svgNS, "svg");
+          svg.setAttribute("xmlns", svgNS);
+          svg.setAttribute("xmlns:xlink", xlinkNS);
+          svg.setAttribute("width", CANVAS_SIZE);
+          svg.setAttribute("height", CANVAS_SIZE);
+          svg.setAttribute("viewBox", "0 0 100 100");
+          svg.style.backgroundColor = "white";
           
-          // 処理の遅延を長めに設定（DOM更新を確実に）
-          setTimeout(function() {
-            console.log('キャプチャ開始');
+          // 背景の白い矩形を追加
+          const background = document.createElementNS(svgNS, "rect");
+          background.setAttribute("x", "0");
+          background.setAttribute("y", "0");
+          background.setAttribute("width", "100");
+          background.setAttribute("height", "100");
+          background.setAttribute("fill", "white");
+          svg.appendChild(background);
+          
+          // 現在のパネル要素を取得
+          const panels = document.querySelectorAll('.panel');
+          
+          // 各パネルをSVGに追加
+          panels.forEach(panel => {
+            // パネルのスタイル情報を取得
+            const style = window.getComputedStyle(panel);
+            const top = parseFloat(style.top) / style.width * 100;
+            const left = parseFloat(style.left) / style.width * 100;
+            const width = parseFloat(style.width) / style.width * 100;
+            const height = parseFloat(style.height) / style.width * 100;
+            const clipPath = panel.style.clipPath;
             
-            // html2canvasを使用して漫画コンテナをキャプチャ
-            html2canvas(mangaContainer, h2cOptions).then(function(canvas) {
-              console.log('キャンバス生成完了', canvas.width, 'x', canvas.height);
+            // パネル用のグループ要素
+            const g = document.createElementNS(svgNS, "g");
+            
+            // 台形の場合の特殊処理
+            if (clipPath && clipPath !== 'none') {
+              const clipPathValue = clipPath.replace("polygon(", "").replace(")", "");
+              const points = [];
               
-              try {
-                // キャンバスをPNG形式に変換
-                canvas.toBlob(function(blob) {
-                  if (!blob) {
-                    throw new Error('Blobの生成に失敗しました');
-                  }
-                  
-                  // ファイル名を生成
-                  const templateTitle = templateInfo.title || '漫画';
-                  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                  const fileName = `${templateTitle}-${timestamp}.png`;
-                  
-                  console.log('Blob生成完了:', blob.size, 'バイト');
-                  
-                  // FileSaver.jsを使用
-                  try {
-                    saveAs(blob, fileName);
-                    console.log('FileSaver.jsでの保存成功');
-                  } catch (fsError) {
-                    console.error('FileSaver.js保存エラー:', fsError);
-                    
-                    // 代替方法: URL.createObjectURL
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    console.log('代替方法での保存成功');
-                  }
-                }, 'image/png', 1.0);
-              } catch (e) {
-                console.error('PNG変換エラー:', e);
-                
-                // フォールバック: DataURL使用
-                try {
-                  const imgData = canvas.toDataURL('image/png');
-                  console.log('DataURL生成完了:', imgData.substring(0, 50) + '...');
-                  
-                  const templateTitle = templateInfo.title || '漫画';
-                  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                  
-                  const link = document.createElement('a');
-                  link.href = imgData;
-                  link.download = `${templateTitle}-${timestamp}.png`;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  
-                  console.log('DataURLでの保存成功');
-                } catch (dataUrlError) {
-                  console.error('DataURL変換エラー:', dataUrlError);
-                  alert('画像の出力に失敗しました。開発者ツールのコンソールを確認してください。');
-                }
-              }
-            }).catch(function(error) {
-              console.error('html2canvas処理エラー:', error);
-              alert('画像のキャプチャに失敗しました: ' + error.message);
-            }).finally(function() {
-              console.log('処理完了、元の状態に戻します');
-              
-              // 必ず元のスタイルに戻す
-              panels.forEach((panel, index) => {
-                if (index < originalStyles.length) {
-                  const style = originalStyles[index];
-                  panel.style.border = style.border;
-                  panel.style.backgroundColor = style.backgroundColor;
-                  panel.style.clipPath = style.clipPath;
-                  panel.innerHTML = style.innerHTML; // 追加した枠線要素を元に戻す
-                  if (style.selected) {
-                    panel.classList.add('selected');
-                  }
-                }
+              // CSSのpolygon形式をSVGのpoints形式に変換
+              clipPathValue.split(",").forEach(point => {
+                const trimmedPoint = point.trim();
+                const parts = trimmedPoint.split(" ");
+                const x = parseFloat(parts[0]) * width / 100 + left;
+                const y = parseFloat(parts[1]) * height / 100 + top;
+                points.push(`${x},${y}`);
               });
               
-              // コンテナのスタイルを元に戻す
-              mangaContainer.style.width = containerOriginalStyles.width;
-              mangaContainer.style.height = containerOriginalStyles.height;
-              mangaContainer.style.position = containerOriginalStyles.position;
-              mangaContainer.style.border = containerOriginalStyles.border;
+              // 台形用のポリゴン要素を作成
+              const polygon = document.createElementNS(svgNS, "polygon");
+              polygon.setAttribute("points", points.join(" "));
+              polygon.setAttribute("fill", "white");
+              polygon.setAttribute("stroke", "black");
+              polygon.setAttribute("stroke-width", "0.2");
+              g.appendChild(polygon);
               
-              // ローディングオーバーレイを非表示
-              loadingOverlay.style.display = 'none';
-            });
-          }, 1500); // 1.5秒の遅延
-        } catch (criticalError) {
-          console.error('致命的なエラー:', criticalError);
-          alert('予期せぬエラーが発生しました: ' + criticalError.message);
+              // 画像を取得
+              const img = panel.querySelector('img');
+              if (img) {
+                // SVG用クリッピングパスを定義
+                const clipPathId = `clip_${panel.id}`;
+                const clipPathElement = document.createElementNS(svgNS, "clipPath");
+                clipPathElement.setAttribute("id", clipPathId);
+                
+                const clipPathPolygon = document.createElementNS(svgNS, "polygon");
+                clipPathPolygon.setAttribute("points", points.join(" "));
+                clipPathElement.appendChild(clipPathPolygon);
+                svg.appendChild(clipPathElement);
+                
+                // 画像を追加
+                const svgImage = document.createElementNS(svgNS, "image");
+                svgImage.setAttributeNS(xlinkNS, "href", img.src);
+                svgImage.setAttribute("x", left);
+                svgImage.setAttribute("y", top);
+                svgImage.setAttribute("width", width);
+                svgImage.setAttribute("height", height);
+                svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
+                g.appendChild(svgImage);
+                
+                // パネル番号を表示（左上に小さく）
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", left + 2);  // 左上に配置
+                text.setAttribute("y", top + 4);   // 少し下に調整
+                text.setAttribute("fill", "red");
+                text.setAttribute("font-size", "2");
+                text.setAttribute("text-anchor", "start");
+                text.textContent = panel.id.replace("panel", "");
+                g.appendChild(text);
+              }
+            } else {
+              // 通常の矩形パネル
+              const rect = document.createElementNS(svgNS, "rect");
+              rect.setAttribute("x", left);
+              rect.setAttribute("y", top);
+              rect.setAttribute("width", width);
+              rect.setAttribute("height", height);
+              rect.setAttribute("fill", "white");
+              rect.setAttribute("stroke", "black");
+              rect.setAttribute("stroke-width", "0.2");
+              g.appendChild(rect);
+              
+              // 画像を取得
+              const img = panel.querySelector('img');
+              if (img) {
+                // 画像を追加
+                const svgImage = document.createElementNS(svgNS, "image");
+                svgImage.setAttributeNS(xlinkNS, "href", img.src);
+                svgImage.setAttribute("x", left);
+                svgImage.setAttribute("y", top);
+                svgImage.setAttribute("width", width);
+                svgImage.setAttribute("height", height);
+                svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                g.appendChild(svgImage);
+                
+                // パネル番号を表示（左上に小さく）
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", left + 2);  // 左上に配置
+                text.setAttribute("y", top + 4);   // 少し下に調整
+                text.setAttribute("fill", "red");
+                text.setAttribute("font-size", "2");
+                text.setAttribute("text-anchor", "start");
+                text.textContent = panel.id.replace("panel", "");
+                g.appendChild(text);
+              }
+            }
+            
+            svg.appendChild(g);
+          });
+          
+          // SVGを文字列に変換
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+          const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+          
+          // SVGを画像に変換
+          const img = new Image();
+          img.onload = function() {
+            // キャンバスに描画
+            const canvas = document.createElement('canvas');
+            canvas.width = CANVAS_SIZE;
+            canvas.height = CANVAS_SIZE;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            
+            // PNG形式に変換
+            try {
+              const imgData = canvas.toDataURL('image/png');
+              
+              // 保存
+              const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+              const fileName = `${templateInfo.title}-${timestamp}.png`;
+              
+              const link = document.createElement('a');
+              link.href = imgData;
+              link.download = fileName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              console.log('SVG→PNG変換成功');
+            } catch (e) {
+              console.error('PNG変換エラー:', e);
+              alert('PNG出力に失敗しました: ' + e.message);
+            }
+            
+            // ローディングオーバーレイを非表示
+            loadingOverlay.style.display = 'none';
+          };
+          
+          img.onerror = function(e) {
+            console.error('SVG読み込みエラー:', e);
+            alert('SVG変換に失敗しました');
+            loadingOverlay.style.display = 'none';
+          };
+          
+          img.src = svgDataUrl;
+          
+        } catch (error) {
+          console.error('処理中にエラーが発生しました:', error);
+          alert('処理中にエラーが発生しました: ' + error.message);
           loadingOverlay.style.display = 'none';
         }
       });
