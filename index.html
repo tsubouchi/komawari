@@ -219,12 +219,29 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      border: 2px solid #000;
+      border: 1px solid #000;
       box-sizing: border-box;
       overflow: hidden;
     }
     
     .panel.selected {
+      border: 2px dashed #ff0000;
+    }
+
+    /* 台形などの特殊形状のコマの境界線用スタイル */
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid #000;
+      pointer-events: none;
+      clip-path: inherit;
+    }
+    
+    .panel.selected::before {
       border: 2px dashed #ff0000;
     }
     
@@ -457,6 +474,27 @@
       grid-column: 3;
       grid-row: 2;
     }
+
+    /* テンプレート情報表示エリア */
+    .template-header {
+      background-color: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .template-header h2 {
+      margin: 0 0 5px 0;
+      color: #333;
+      font-size: 20px;
+    }
+
+    .template-header p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -526,6 +564,12 @@
           <button id="reset-btn">リセット</button>
           <button id="export-btn" class="export-btn">PNG出力</button>
         </div>
+      </div>
+      
+      <!-- テンプレート情報 -->
+      <div class="template-header" id="template-header">
+        <h2>テンプレート名</h2>
+        <p>テンプレートの説明</p>
       </div>
       
       <div class="manga-container" id="manga-container">
@@ -732,6 +776,13 @@
           // 漫画コンテナをクリア
           mangaContainer.innerHTML = '';
           
+          // テンプレート情報をヘッダーに表示
+          const templateHeader = document.getElementById('template-header');
+          templateHeader.innerHTML = `
+            <h2>${template.title}</h2>
+            <p>${template.description}</p>
+          `;
+          
           // パネルの作成
           template.panels.forEach(panel => {
             const panelElement = document.createElement('div');
@@ -802,6 +853,13 @@
           // 漫画コンテナをクリア
           mangaContainer.innerHTML = '';
           
+          // テンプレート情報をヘッダーに表示
+          const templateHeader = document.getElementById('template-header');
+          templateHeader.innerHTML = `
+            <h2>${defaultTemplateData.title}</h2>
+            <p>${defaultTemplateData.description}</p>
+          `;
+          
           // パネルの作成
           defaultTemplateData.panels.forEach(panel => {
             const panelElement = document.createElement('div');
@@ -862,6 +920,13 @@
           currentTemplate = fallbackTemplateData;
           updateStep(2);
           
+          // テンプレート情報をヘッダーに表示
+          const templateHeader = document.getElementById('template-header');
+          templateHeader.innerHTML = `
+            <h2>${fallbackTemplateData.title}</h2>
+            <p>${fallbackTemplateData.description}</p>
+          `;
+          
           // 残りのコードは同じ...
           mangaContainer.innerHTML = '';
           
@@ -904,7 +969,7 @@
         if (currentPanel) {
           currentPanel.classList.remove('selected');
           // 通常の枠線に戻す
-          currentPanel.style.border = '2px solid #000';
+          currentPanel.style.border = '1px solid #000';
         }
         
         currentPanel = panel;
@@ -938,7 +1003,7 @@
         if (currentPanel) {
           currentPanel.classList.remove('selected');
           // 通常の枠線に戻す
-          currentPanel.style.border = '2px solid #000';
+          currentPanel.style.border = '1px solid #000';
         }
         
         // 新しいパネルを選択
@@ -1072,7 +1137,7 @@
           if (panel.classList.contains('selected')) {
             panel.style.border = '2px dashed #ff0000';
           } else {
-            panel.style.border = '2px solid #000';
+            panel.style.border = '1px solid #000';
           }
         });
         
