@@ -222,6 +222,7 @@
       border: 1px solid #000;
       box-sizing: border-box;
       overflow: hidden;
+      background-color: #f5f5f5;
     }
     
     .panel.selected {
@@ -239,6 +240,7 @@
       border: 1px solid #000;
       pointer-events: none;
       clip-path: inherit;
+      z-index: 2;
     }
     
     .panel.selected::before {
@@ -798,6 +800,11 @@
             // clipPathがある場合は適用
             if (panel.clipPath) {
               panelElement.style.clipPath = panel.clipPath;
+              // 台形などの特殊形状には薄い背景色を適用
+              panelElement.style.backgroundColor = '#e8eaf6';
+            } else {
+              // 通常のパネルには少し薄い色を適用
+              panelElement.style.backgroundColor = '#f5f5f5';
             }
             
             // 位置情報をデータ属性として保存
@@ -875,6 +882,11 @@
             // clipPathがある場合は適用
             if (panel.clipPath) {
               panelElement.style.clipPath = panel.clipPath;
+              // 台形などの特殊形状には薄い背景色を適用
+              panelElement.style.backgroundColor = '#e8eaf6';
+            } else {
+              // 通常のパネルには少し薄い色を適用
+              panelElement.style.backgroundColor = '#f5f5f5';
             }
             
             // 位置情報をデータ属性として保存
@@ -940,6 +952,16 @@
             panelElement.style.height = `${panel.height}%`;
             panelElement.style.backgroundSize = 'cover';
             panelElement.style.backgroundPosition = 'center';
+            
+            // clipPathがある場合は適用
+            if (panel.clipPath) {
+              panelElement.style.clipPath = panel.clipPath;
+              // 台形などの特殊形状には薄い背景色を適用
+              panelElement.style.backgroundColor = '#e8eaf6';
+            } else {
+              // 通常のパネルには少し薄い色を適用
+              panelElement.style.backgroundColor = '#f5f5f5';
+            }
             
             panelElement.dataset.top = `${panel.top}%`;
             panelElement.dataset.left = `${panel.left}%`;
@@ -1130,8 +1152,14 @@
           panel.innerHTML = '';
           // 背景画像もクリア
           panel.style.backgroundImage = 'none';
-          // 背景色をリセット
-          panel.style.backgroundColor = '';
+          
+          // 台形パネルの場合は薄い色を設定
+          if (panel.style.clipPath && panel.style.clipPath !== 'none') {
+            panel.style.backgroundColor = '#e8eaf6';
+          } else {
+            // 通常のパネルには薄い色を設定
+            panel.style.backgroundColor = '#f5f5f5';
+          }
           
           // 選択状態のボーダーを維持
           if (panel.classList.contains('selected')) {
