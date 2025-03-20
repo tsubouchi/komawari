@@ -532,6 +532,7 @@
   <div id="loading-overlay">
     <div class="spinner"></div>
     <div class="loading-text">画像を生成中...</div>
+    <div class="process-status" style="color:white; margin-top:10px; font-size:14px;"></div>
   </div>
   
   <div class="container">
@@ -1272,6 +1273,11 @@
       // PNG出力ボタンの処理
       exportBtn.addEventListener('click', function() {
         // ローディングオーバーレイを表示
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const processStatus = loadingOverlay.querySelector('.process-status');
+        
+        loadingText.textContent = '画像を生成中...';
+        processStatus.textContent = 'SVGデータを準備中...';
         loadingOverlay.style.display = 'flex';
         
         try {
@@ -1577,7 +1583,47 @@
             console.log('サーバーからの応答:', data);
             
             if (data.success) {
-              // ダウンロード用のリンクを作成して自動クリック
+              // 処理ステータスの表示更新
+              loadingText.textContent = 
+                data.processStatus ? `${data.processStatus.message} - 画像を保存中...` : '画像を生成しました';
+              
+              // プレビュー画像を表示（オプション）
+              if (data.previewUrl) {
+                console.log('プレビュー表示:', data.previewUrl);
+                
+                // プレビュー画像要素を作成
+                const previewElem = document.createElement('div');
+                previewElem.style.position = 'fixed';
+                previewElem.style.bottom = '20px';
+                previewElem.style.left = '20px';
+                previewElem.style.backgroundColor = 'white';
+                previewElem.style.padding = '10px';
+                previewElem.style.borderRadius = '5px';
+                previewElem.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                previewElem.style.zIndex = '10000';
+                previewElem.innerHTML = `
+                  <div style="margin-bottom:5px;">PNG出力完了:</div>
+                  <img src="${data.previewUrl}" style="max-width:300px; max-height:300px; border:1px solid #ccc;" />
+                  <div style="margin-top:10px; text-align:center;">
+                    <button id="preview-close" style="padding:5px 10px; background:#f44336; color:white; border:none; border-radius:3px; cursor:pointer;">閉じる</button>
+                  </div>
+                `;
+                document.body.appendChild(previewElem);
+                
+                // 閉じるボタンのイベント設定
+                document.getElementById('preview-close').addEventListener('click', () => {
+                  document.body.removeChild(previewElem);
+                });
+                
+                // 10秒後に自動的に閉じる
+                setTimeout(() => {
+                  if (document.body.contains(previewElem)) {
+                    document.body.removeChild(previewElem);
+                  }
+                }, 10000);
+              }
+              
+              // 画像ダウンロード
               const link = document.createElement('a');
               link.href = data.downloadUrl;
               link.download = data.fileName;
@@ -1592,46 +1638,16 @@
           })
           .catch(error => {
             console.error('サーバーサイド変換エラー:', error);
-            alert('画像変換に失敗しました: ' + error.message);
             
-            // エラー時はクライアントサイドでフォールバック
-            try {
-              // クライアントサイドでの代替変換処理
-              const canvas = document.createElement('canvas');
-              canvas.width = CANVAS_SIZE;
-              canvas.height = CANVAS_SIZE;
-              const ctx = canvas.getContext('2d');
-              
-              // 画像を描画するための要素
-              const img = new Image();
-              img.onload = function() {
-                // キャンバスを白で塗りつぶし
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // SVG画像を描画
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                // PNG形式に変換してダウンロード
-                const imgData = canvas.toDataURL('image/png');
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                const fileName = `${templateInfo.title}-${timestamp}.png`;
-                
-                const link = document.createElement('a');
-                link.href = imgData;
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                console.log('クライアント側でのフォールバック変換に成功しました');
-              };
-              
-              img.src = svgDataUrl;
-            } catch (fallbackError) {
-              console.error('フォールバック処理も失敗:', fallbackError);
-              alert('画像生成に失敗しました。もう一度お試しください。');
-            }
+            // エラー表示を詳細に
+            loadingText.textContent = '画像変換エラー';
+            processStatus.textContent = error.message;
+            processStatus.style.color = '#ffcccc';
+            
+            // 3秒後にアラート表示
+            setTimeout(() => {
+              alert('画像変換に失敗しました: ' + error.message);
+            }, 3000);
           })
           .finally(() => {
             // 処理が完了したらローディングオーバーレイを非表示

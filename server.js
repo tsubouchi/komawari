@@ -153,10 +153,24 @@ app.post('/api/convert-svg', async (req, res) => {
       });
     }
     
+    // 処理ステータス
+    const processStatus = {
+      step: 'init',
+      message: '画像変換を開始します',
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+    
     // ファイル名の生成
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const fileName = `${title}-${timestamp}.png`;
     const filePath = path.join(tmpDir, fileName);
+    
+    // 進捗ステータス更新
+    processStatus.step = 'create_canvas';
+    processStatus.message = 'キャンバス作成中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
     
     // キャンバスサイズ設定
     const CANVAS_SIZE = 2000; // 高解像度で出力
@@ -167,19 +181,34 @@ app.post('/api/convert-svg', async (req, res) => {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // 進捗ステータス更新
+    processStatus.step = 'image_caching';
+    processStatus.message = '画像のキャッシュ中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+    
     // 画像URLをキャッシュ
     const imageCache = {};
     
     // 受信した画像URLを事前にダウンロードしてキャッシュ
     for (const url of imageUrls) {
       try {
+        // 進捗ステータス更新
+        processStatus.step = 'downloading_image';
+        processStatus.message = `画像ダウンロード中: ${url}`;
+        console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+        
         const img = await downloadImage(url);
         imageCache[url] = img;
-        console.log(`画像をキャッシュしました: ${url}`);
+        console.log(`画像をキャッシュしました: ${url} (${img.width}x${img.height})`);
       } catch (error) {
         console.error(`画像のキャッシュに失敗: ${url}`, error);
       }
     }
+    
+    // 進捗ステータス更新
+    processStatus.step = 'svg_parsing';
+    processStatus.message = 'SVGパース中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
     
     // 各パネルの情報を抽出
     const panelRegex = /<g>[\s\S]*?<\/g>/g;
@@ -192,9 +221,19 @@ app.post('/api/convert-svg', async (req, res) => {
     
     console.log(`抽出されたパネル数: ${panels.length}`);
     
+    // 進捗ステータス更新
+    processStatus.step = 'panel_drawing';
+    processStatus.message = 'パネル描画中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+    
     // 各パネルを描画
     for (let i = 0; i < panels.length; i++) {
       const panelData = panels[i];
+      
+      // 進捗ステータス更新
+      processStatus.step = `drawing_panel_${i+1}`;
+      processStatus.message = `パネル ${i+1} 描画中`;
+      console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
       
       // パネルから長方形または多角形の情報を抽出
       let rectMatch = panelData.match(/<rect[^>]*x="([^"]*)"[^>]*y="([^"]*)"[^>]*width="([^"]*)"[^>]*height="([^"]*)"/);
@@ -214,14 +253,31 @@ app.post('/api/convert-svg', async (req, res) => {
         console.log(`パネル ${i+1} の画像情報:`, { x, y, width, height, imageUrl });
         
         try {
-          let img = null;
+          // クライアントから受け取った画像URLリストから該当する画像を探す
+          const decodedImageUrl = decodeURIComponent(imageUrl);
+          const imageName = decodedImageUrl.split('/').pop(); // URLの最後の部分（ファイル名）を取得
+          console.log(`画像名: ${imageName}`);
           
-          // キャッシュから画像を取得
-          if (imageCache[imageUrl]) {
-            img = imageCache[imageUrl];
-            console.log(`キャッシュから画像を使用: ${imageUrl}`);
+          // 受信したimageUrlsからマッチするURLを検索
+          let matchedUrl = null;
+          for (const url of imageUrls) {
+            if (url.includes(imageName)) {
+              matchedUrl = url;
+              console.log(`画像URLがマッチしました: ${url}`);
+              break;
+            }
+          }
+          
+          if (matchedUrl) {
+            // 既にフルURLが見つかった場合はそれを使用
+            imageUrl = matchedUrl;
           } else {
-            // 画像URLの解決（相対パスを絶対URLに変換）
+            // フルURLが見つからなかった場合はベースURLから構築
+            // 進捗ステータス更新
+            processStatus.step = `resolving_image_url`;
+            processStatus.message = `画像URL解決中: ${imageUrl}`;
+            console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+            
             let baseUrl;
             if (process.env.VERCEL) {
               // Vercel環境ではリクエストヘッダーからホスト名を取得
@@ -234,39 +290,32 @@ app.post('/api/convert-svg', async (req, res) => {
               baseUrl = `http://localhost:${PORT}`;
             }
             
-            // クライアントから受け取った画像URLリストから該当する画像を探す
-            const decodedImageUrl = decodeURIComponent(imageUrl);
-            const imageName = decodedImageUrl.split('/').pop(); // URLの最後の部分（ファイル名）を取得
-            console.log(`画像名: ${imageName}`);
-            
-            // 受信したimageUrlsからマッチするURLを検索
-            let matchedUrl = null;
-            for (const url of imageUrls) {
-              if (url.includes(imageName)) {
-                matchedUrl = url;
-                console.log(`画像URLがマッチしました: ${url}`);
-                break;
-              }
+            if (imageUrl.startsWith('/')) {
+              imageUrl = `${baseUrl}${imageUrl}`;
+            } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+              imageUrl = `${baseUrl}/${imageName}`;
             }
-            
-            if (matchedUrl) {
-              // 既にフルURLが見つかった場合はそれを使用
-              imageUrl = matchedUrl;
-            } else {
-              // フルURLが見つからなかった場合はベースURLから構築
-              if (imageUrl.startsWith('/')) {
-                imageUrl = `${baseUrl}${imageUrl}`;
-              } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-                imageUrl = `${baseUrl}/${imageName}`;
-              }
-            }
-            
-            console.log(`解決された画像URL: ${imageUrl}`);
-            
+          }
+          
+          console.log(`解決された画像URL: ${imageUrl}`);
+          
+          let img = null;
+          
+          // キャッシュから画像を取得
+          if (imageCache[imageUrl]) {
+            img = imageCache[imageUrl];
+            console.log(`キャッシュから画像を使用: ${imageUrl}`);
+          } else {
             // 画像をダウンロード
             try {
+              // 進捗ステータス更新
+              processStatus.step = `downloading_missing_image`;
+              processStatus.message = `未キャッシュ画像ダウンロード中: ${imageUrl}`;
+              console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+              
               img = await downloadImage(imageUrl);
               imageCache[imageUrl] = img; // キャッシュに追加
+              console.log(`追加画像ダウンロード完了: ${imageUrl} (${img.width}x${img.height})`);
             } catch (imgError) {
               console.error(`画像のダウンロードに失敗: ${imageUrl}`, imgError);
               continue; // このパネルの画像処理をスキップ
@@ -324,6 +373,15 @@ app.post('/api/convert-svg', async (req, res) => {
           console.log(`画像の元サイズ: ${img.width}x${img.height}`);
           console.log(`描画サイズと位置: x=${x}, y=${y}, width=${width}, height=${height}`);
           
+          // 画像のアスペクト比計算
+          const imgAspect = img.width / img.height;
+          const panelAspect = width / height;
+          
+          // 進捗ステータス更新
+          processStatus.step = `drawing_image_${i+1}`;
+          processStatus.message = `パネル ${i+1} の画像描画中`;
+          console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+          
           // 画像のクリッピングパスの処理
           if (polygonMatch) {
             // 多角形のクリッピングの場合
@@ -347,10 +405,7 @@ app.post('/api/convert-svg', async (req, res) => {
               ctx.closePath();
               ctx.clip();
               
-              // クリッピングパスの内側に画像を描画（アスペクト比を保ちながら）
-              const imgAspect = img.width / img.height;
-              const panelAspect = width / height;
-              
+              // アスペクト比を保ちながら画像を描画
               let drawWidth, drawHeight, offsetX, offsetY;
               
               if (imgAspect > panelAspect) {
@@ -388,10 +443,7 @@ app.post('/api/convert-svg', async (req, res) => {
             ctx.rect(rectX, rectY, rectWidth, rectHeight);
             ctx.clip();
             
-            // クリッピングパスの内側に画像を描画（アスペクト比を保ちながら）
-            const imgAspect = img.width / img.height;
-            const panelAspect = rectWidth / rectHeight;
-            
+            // アスペクト比を保ちながら画像を描画
             let drawWidth, drawHeight, offsetX, offsetY;
             
             if (imgAspect > panelAspect) {
@@ -418,9 +470,6 @@ app.post('/api/convert-svg', async (req, res) => {
             ctx.restore();
           } else {
             // クリッピングパスがない場合も、アスペクト比を保ちながら描画
-            const imgAspect = img.width / img.height;
-            const panelAspect = width / height;
-            
             let drawWidth, drawHeight, offsetX, offsetY;
             
             if (imgAspect > panelAspect) {
@@ -442,6 +491,9 @@ app.post('/api/convert-svg', async (req, res) => {
           
         } catch (imgError) {
           console.error(`パネル ${i+1} の画像描画中にエラー:`, imgError);
+          processStatus.step = `panel_${i+1}_error`;
+          processStatus.message = `パネル ${i+1} の画像描画エラー: ${imgError.message}`;
+          console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
           // エラーが発生しても処理を続行
         }
       }
@@ -458,6 +510,11 @@ app.post('/api/convert-svg', async (req, res) => {
         ctx.fillText(panelNumber, textX, textY);
       }
     }
+    
+    // 進捗ステータス更新
+    processStatus.step = 'drawing_borders';
+    processStatus.message = 'パネル枠線描画中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
     
     // パネルの枠線を描画
     for (let i = 0; i < panels.length; i++) {
@@ -506,6 +563,11 @@ app.post('/api/convert-svg', async (req, res) => {
       }
     }
     
+    // 進捗ステータス更新
+    processStatus.step = 'saving_png';
+    processStatus.message = 'PNG形式で保存中';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+    
     // PNGとして保存
     const out = fs.createWriteStream(filePath);
     const stream = canvas.createPNGStream({
@@ -521,7 +583,15 @@ app.post('/api/convert-svg', async (req, res) => {
       out.on('error', reject);
     });
     
+    // 進捗ステータス更新
+    processStatus.step = 'complete';
+    processStatus.message = 'PNG画像の生成完了';
+    console.log(`処理ステータス: ${processStatus.step} - ${processStatus.message}`);
+    
     console.log(`PNG画像を保存しました: ${filePath}`);
+    
+    // 一時的なプレビューURLも含めて返す（オプション）
+    const previewUrl = `/tmp/${fileName}?preview=true`;
     
     // ファイルのダウンロードURLを返す
     const downloadUrl = `/tmp/${fileName}`;
@@ -529,7 +599,9 @@ app.post('/api/convert-svg', async (req, res) => {
       success: true, 
       message: 'SVGの変換に成功しました',
       downloadUrl,
-      fileName
+      previewUrl,
+      fileName,
+      processStatus
     });
     
   } catch (error) {
