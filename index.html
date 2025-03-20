@@ -1221,17 +1221,14 @@
               element: panel,
               border: panel.style.border,
               selected: panel.classList.contains('selected'),
-              backgroundColor: panel.style.backgroundColor
+              backgroundColor: panel.style.backgroundColor,
+              clipPath: panel.style.clipPath,
+              // その他必要な状態
+              innerHTML: panel.innerHTML
             });
-            
-            // 選択状態を解除し枠線を非表示に
-            panel.classList.remove('selected');
-            panel.style.border = 'none';
-            // 背景を白に統一（透明部分を防ぐ）
-            panel.style.backgroundColor = 'white';
           });
           
-          // キャプチャのために固定サイズに設定（重要: アスペクト比を保持）
+          // キャプチャのために固定サイズに設定
           const CANVAS_SIZE = 1000; // 固定サイズ（大きめに）
           mangaContainer.style.width = CANVAS_SIZE + 'px';
           mangaContainer.style.height = CANVAS_SIZE + 'px';
@@ -1246,6 +1243,44 @@
           
           console.log('出力開始: キャンバスサイズ', CANVAS_SIZE);
           
+          // 特殊処理：clipPathを持つパネルの疑似要素を実要素に変換
+          panels.forEach((panel, index) => {
+            const panelHasClipPath = panel.style.clipPath && panel.style.clipPath !== 'none';
+            
+            // 選択状態を解除
+            panel.classList.remove('selected');
+            
+            // clipPathがある場合の特殊処理
+            if (panelHasClipPath) {
+              console.log(`パネル${index+1}はclipPathを持っています:`, panel.style.clipPath);
+              
+              // オリジナルの内容を保存
+              const originalContent = panel.innerHTML;
+              
+              // 枠線を非表示に
+              panel.style.border = 'none';
+              
+              // 枠線用の明示的な要素を追加（clipPathされた枠線用）
+              const clipPathBorder = document.createElement('div');
+              clipPathBorder.style.position = 'absolute';
+              clipPathBorder.style.top = '0';
+              clipPathBorder.style.left = '0';
+              clipPathBorder.style.width = '100%';
+              clipPathBorder.style.height = '100%';
+              clipPathBorder.style.border = '1px solid #000';
+              clipPathBorder.style.clipPath = panel.style.clipPath;
+              clipPathBorder.style.pointerEvents = 'none';
+              clipPathBorder.style.boxSizing = 'border-box';
+              clipPathBorder.style.zIndex = '10';
+              
+              // パネルに枠線要素を追加
+              panel.appendChild(clipPathBorder);
+            } else {
+              // 通常のパネルは単に枠線を非表示に
+              panel.style.border = 'none';
+            }
+          });
+          
           // html2canvasの設定
           const h2cOptions = {
             backgroundColor: "#ffffff",
@@ -1258,13 +1293,6 @@
             onclone: function(clonedDoc) {
               console.log('クローン作成');
               const clonedContainer = clonedDoc.getElementById('manga-container');
-              const clonedPanels = clonedContainer.querySelectorAll('.panel');
-              
-              // クローン内のすべてのパネルの枠線を完全に削除
-              clonedPanels.forEach(panel => {
-                panel.style.border = 'none';
-              });
-              
               return clonedDoc;
             }
           };
@@ -1346,6 +1374,8 @@
                   const style = originalStyles[index];
                   panel.style.border = style.border;
                   panel.style.backgroundColor = style.backgroundColor;
+                  panel.style.clipPath = style.clipPath;
+                  panel.innerHTML = style.innerHTML; // 追加した枠線要素を元に戻す
                   if (style.selected) {
                     panel.classList.add('selected');
                   }
