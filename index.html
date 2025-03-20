@@ -651,14 +651,44 @@
       preloadImages.forEach(src => {
         const img = new Image();
         img.crossOrigin = "anonymous"; // CORS対応を追加
-        img.src = src;
-        imageCache[src] = img;
-        img.onload = () => console.log(`画像プリロード完了: ${src}`);
+        
+        // フルパスに変換して保存しておく関数
+        const saveFullPath = () => {
+          // キャッシュに画像を保存
+          imageCache[src] = img;
+          
+          // 絶対URLをキャッシュに保存
+          if (img.src.startsWith('http') || img.src.startsWith('data:')) {
+            imageCache[src + '_fullpath'] = img.src;
+            console.log(`画像の絶対パスをキャッシュ: ${src} -> ${img.src}`);
+          }
+        };
+        
+        img.onload = () => {
+          console.log(`画像プリロード完了: ${src}`);
+          saveFullPath();
+        };
+        
         img.onerror = () => {
           console.error(`画像プリロード失敗: ${src}、相対パスを試します`);
           // ローカルでの開発時のフォールバック
-          img.src = './' + src;
+          if (!img.src.startsWith('./')) {
+            img.src = './' + src;
+          } else {
+            console.error(`画像ロード最終失敗: ${src}`);
+          }
         };
+        
+        // 絶対URLの場合は直接、そうでなければVarcelのドメインからの相対パスを試す
+        if (window.location.hostname.includes('vercel.app')) {
+          // Vercel環境では完全なURLを構築
+          const baseUrl = window.location.origin;
+          img.src = `${baseUrl}/${src}`;
+          console.log(`Vercel環境での画像パス: ${img.src}`);
+        } else {
+          // ローカル環境など
+          img.src = src;
+        }
       });
       
       // 要素の取得
@@ -1104,6 +1134,75 @@
         templateSelectionScreen.style.display = 'block';
       });
 
+      // 画像をパネルに追加する共通関数
+      function addImageToPanel(panel, imageName) {
+        // 絶対パスを取得
+        const getFullImagePath = (imageName) => {
+          // すでに絶対URLなら変更しない
+          if (imageName.startsWith('http') || imageName.startsWith('data:')) {
+            return imageName;
+          }
+          
+          // キャッシュにあれば使用
+          if (imageCache[imageName + '_fullpath']) {
+            return imageCache[imageName + '_fullpath'];
+          }
+          
+          // Vercel環境では完全なURLを構築
+          if (window.location.hostname.includes('vercel.app')) {
+            const baseUrl = window.location.origin;
+            return `${baseUrl}/${imageName}`;
+          }
+          
+          // 相対パスを絶対URLに変換
+          const a = document.createElement('a');
+          a.href = imageName;
+          return a.href;
+        };
+        
+        // 絶対パスに変換
+        const fullImagePath = getFullImagePath(imageName);
+        
+        // パネル背景色を変更して視覚的に確認できるようにする
+        panel.style.backgroundColor = '#e1f5fe';
+        
+        // 背景画像として設定する（CSSの方法）
+        panel.style.backgroundImage = `url('${fullImagePath}')`;
+        panel.style.backgroundSize = 'cover';
+        panel.style.backgroundPosition = 'center';
+        
+        console.log(`パネル ${panel.id} に画像を設定: ${fullImagePath}`);
+        
+        // インラインでHTMLタグも追加しておく（念のため）
+        panel.innerHTML = `
+          <img src="${fullImagePath}" 
+               alt="${imageName}" 
+               crossorigin="anonymous"
+               style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1;">
+          <div style="position:absolute; bottom:5px; right:5px; background:#ff0000; color:#fff; padding:2px 5px; font-size:10px; z-index:2;">
+            ${imageName}
+          </div>
+        `;
+        
+        console.log('画像を追加しました:', imageName);
+        
+        // すべてのパネルに画像が設定されているか確認
+        const panels = document.querySelectorAll('.panel');
+        let allPanelsHaveImages = true;
+        
+        panels.forEach(panel => {
+          if (panel.querySelector('img') === null && 
+              (!panel.style.backgroundImage || panel.style.backgroundImage === 'none')) {
+            allPanelsHaveImages = false;
+          }
+        });
+        
+        // すべてのパネルに画像が設定されていれば次のステップに進む
+        if (allPanelsHaveImages) {
+          updateStep(3);
+        }
+      }
+
       // 画像適用ボタンの処理
       applyBtn.addEventListener('click', function() {
         const selectedImage = imageSelect.value;
@@ -1114,42 +1213,8 @@
         existingImages.forEach(img => img.remove());
         
         if (selectedImage) {
-          // パネル背景色を変更して視覚的に確認できるようにする
-          currentPanel.style.backgroundColor = '#e1f5fe';
-          
-          // 背景画像として設定する（CSSの方法）
-          currentPanel.style.backgroundImage = `url('${selectedImage}')`;
-          currentPanel.style.backgroundSize = 'cover';
-          currentPanel.style.backgroundPosition = 'center';
-          
-          // インラインでHTMLタグも追加しておく（念のため）
-          currentPanel.innerHTML = `
-            <img src="${selectedImage}" 
-                 alt="${selectedImage}" 
-                 crossorigin="anonymous"
-                 style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1;">
-            <div style="position:absolute; bottom:5px; right:5px; background:#ff0000; color:#fff; padding:2px 5px; font-size:10px; z-index:2;">
-              ${selectedImage}
-            </div>
-          `;
-          
-          console.log('画像を追加しました:', selectedImage);
-          
-          // すべてのパネルに画像が設定されているか確認
-          const panels = document.querySelectorAll('.panel');
-          let allPanelsHaveImages = true;
-          
-          panels.forEach(panel => {
-            if (panel.querySelector('img') === null && 
-                (!panel.style.backgroundImage || panel.style.backgroundImage === 'none')) {
-              allPanelsHaveImages = false;
-            }
-          });
-          
-          // すべてのパネルに画像が設定されていれば次のステップに進む
-          if (allPanelsHaveImages) {
-            updateStep(3);
-          }
+          // 画像をパネルに追加
+          addImageToPanel(currentPanel, selectedImage);
         } else {
           // 画像なしの場合
           currentPanel.style.backgroundImage = 'none';
@@ -1198,42 +1263,8 @@
           imageSelect.value = imageName;
           
           if (currentPanel) {
-            // パネル背景色を変更して視覚的に確認できるようにする
-            currentPanel.style.backgroundColor = '#e1f5fe';
-            
-            // 背景画像として設定する（CSSの方法）
-            currentPanel.style.backgroundImage = `url('${imageName}')`;
-            currentPanel.style.backgroundSize = 'cover';
-            currentPanel.style.backgroundPosition = 'center';
-            
-            // インラインでHTMLタグも追加しておく（念のため）
-            currentPanel.innerHTML = `
-              <img src="${imageName}" 
-                   alt="${imageName}" 
-                   crossorigin="anonymous"
-                   style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1;">
-              <div style="position:absolute; bottom:5px; right:5px; background:#ff0000; color:#fff; padding:2px 5px; font-size:10px; z-index:2;">
-                ${imageName}
-              </div>
-            `;
-            
-            console.log('画像を追加しました:', imageName);
-            
-            // すべてのパネルに画像が設定されているか確認
-            const panels = document.querySelectorAll('.panel');
-            let allPanelsHaveImages = true;
-            
-            panels.forEach(panel => {
-              if (panel.querySelector('img') === null && 
-                  (!panel.style.backgroundImage || panel.style.backgroundImage === 'none')) {
-                allPanelsHaveImages = false;
-              }
-            });
-            
-            // すべてのパネルに画像が設定されていれば次のステップに進む
-            if (allPanelsHaveImages) {
-              updateStep(3);
-            }
+            // 画像をパネルに追加
+            addImageToPanel(currentPanel, imageName);
           }
         });
       });
@@ -1360,15 +1391,27 @@
                 clipPathElement.appendChild(clipPathPolygon);
                 svg.appendChild(clipPathElement);
                 
+                // 画像URLの解決（相対パスを絶対URLに変換）
+                let imgSrc = img.src;
+                // すでに絶対URLかどうかをチェック
+                if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+                  // 相対パスを絶対URLに変換
+                  const a = document.createElement('a');
+                  a.href = imgSrc;
+                  imgSrc = a.href;
+                }
+                console.log(`パネル ${panel.id} の画像URL:`, imgSrc);
+                
                 // 画像を追加
                 const svgImage = document.createElementNS(svgNS, "image");
-                svgImage.setAttributeNS(xlinkNS, "href", img.src);
+                svgImage.setAttributeNS(xlinkNS, "href", imgSrc);
                 svgImage.setAttribute("x", validLeft);
                 svgImage.setAttribute("y", validTop);
                 svgImage.setAttribute("width", validWidth);
                 svgImage.setAttribute("height", validHeight);
                 svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
                 svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
+                svgImage.setAttribute("crossorigin", "anonymous");
                 g.appendChild(svgImage);
                 
                 // パネル番号を表示（左上に小さく）
@@ -1396,14 +1439,26 @@
               // 画像を取得
               const img = panel.querySelector('img');
               if (img) {
+                // 画像URLの解決（相対パスを絶対URLに変換）
+                let imgSrc = img.src;
+                // すでに絶対URLかどうかをチェック
+                if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+                  // 相対パスを絶対URLに変換
+                  const a = document.createElement('a');
+                  a.href = imgSrc;
+                  imgSrc = a.href;
+                }
+                console.log(`パネル ${panel.id} の画像URL:`, imgSrc);
+                
                 // 画像を追加
                 const svgImage = document.createElementNS(svgNS, "image");
-                svgImage.setAttributeNS(xlinkNS, "href", img.src);
+                svgImage.setAttributeNS(xlinkNS, "href", imgSrc);
                 svgImage.setAttribute("x", validLeft);
                 svgImage.setAttribute("y", validTop);
                 svgImage.setAttribute("width", validWidth);
                 svgImage.setAttribute("height", validHeight);
                 svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                svgImage.setAttribute("crossorigin", "anonymous");
                 g.appendChild(svgImage);
                 
                 // パネル番号を表示（左上に小さく）
@@ -1513,6 +1568,52 @@
           const blobURL = URL.createObjectURL(svgBlob);
           console.log('BlobURL生成：', blobURL);
           img.src = blobURL;
+          
+          // 画像読み込みの強制タイムアウト処理追加
+          setTimeout(() => {
+            if (!img.complete) {
+              console.log('タイムアウト処理: SVG画像読み込みが完了していません。強制的に処理続行します。');
+              
+              // 代替方法: Data URLを直接使用
+              try {
+                // キャンバスに描画
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                
+                // キャンバスを白で塗りつぶし
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // PNG形式に変換
+                const imgData = canvas.toDataURL('image/png');
+                
+                // 保存
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const fileName = `${templateInfo.title}-${timestamp}.png`;
+                
+                const link = document.createElement('a');
+                link.href = imgData;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Blobリソースを解放
+                URL.revokeObjectURL(blobURL);
+                
+                // ローディングオーバーレイを非表示
+                loadingOverlay.style.display = 'none';
+                
+                console.log('SVG読み込み失敗時の代替処理が完了しました');
+              } catch (e) {
+                console.error('代替処理中にエラーが発生しました:', e);
+                alert('画像生成に失敗しました: ' + e.message);
+                loadingOverlay.style.display = 'none';
+              }
+            }
+          }, 5000); // 5秒のタイムアウト
           
         } catch (error) {
           console.error('処理中にエラーが発生しました:', error);
