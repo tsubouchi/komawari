@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>漫画コマ枠エディター</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
@@ -84,12 +85,15 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
+      gap: 2px;
     }
 
     .thumbnail-panel {
       border: 2px solid #000;
       background-color: #f0f0f0;
       box-sizing: border-box;
+      min-height: 10px;
+      min-width: 10px;
     }
     
     .controls {
@@ -198,12 +202,16 @@
     
     .manga-container {
       width: 100%;
-      height: 800px;
+      max-width: 800px;
+      height: auto;
+      aspect-ratio: 1;
       background-color: white;
       border: 1px solid #333;
       position: relative;
-      margin-bottom: 20px;
+      margin: 0 auto 20px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+      overflow: hidden;
     }
     
     .panel {
@@ -213,6 +221,7 @@
       background-repeat: no-repeat;
       border: 2px solid #000;
       box-sizing: border-box;
+      overflow: hidden;
     }
     
     .panel.selected {
@@ -276,11 +285,19 @@
       border-color: #4CAF50;
     }
 
-    #template-selection-screen {
+    #template-selection-screen.active {
       display: block;
     }
 
-    #manga-editor-screen {
+    #template-selection-screen:not(.active) {
+      display: none;
+    }
+
+    #manga-editor-screen.active {
+      display: block;
+    }
+
+    #manga-editor-screen:not(.active) {
       display: none;
     }
 
@@ -351,6 +368,94 @@
       display: flex;
       justify-content: flex-end;
       margin-top: 20px;
+    }
+
+    /* テンプレートプレビュースタイル */
+    .template-preview-template1 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .template-preview-template2 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr 1fr 1fr;
+    }
+
+    .template-preview-template3 .thumbnail-panel:first-child {
+      grid-row: span 3;
+      grid-column: 1;
+    }
+    .template-preview-template3 .thumbnail-panel:nth-child(2),
+    .template-preview-template3 .thumbnail-panel:nth-child(3),
+    .template-preview-template3 .thumbnail-panel:nth-child(4) {
+      grid-column: 2;
+    }
+
+    .template-preview-template4 .thumbnail-panel:first-child {
+      grid-row: span 2;
+      grid-column: 1;
+    }
+    .template-preview-template4 .thumbnail-panel:nth-child(2),
+    .template-preview-template4 .thumbnail-panel:nth-child(3) {
+      grid-column: 2;
+    }
+    .template-preview-template4 .thumbnail-panel:nth-child(4) {
+      grid-column: span 2;
+    }
+
+    .template-preview-template5 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .template-preview-template6 .thumbnail-panel:nth-child(odd) {
+      margin-right: 25%;
+    }
+    .template-preview-template6 .thumbnail-panel:nth-child(even) {
+      margin-left: 25%;
+    }
+
+    .template-preview-template7 .thumbnail-panel:first-child {
+      grid-column: span 3;
+    }
+    .template-preview-template7 .thumbnail-panel:nth-child(2),
+    .template-preview-template7 .thumbnail-panel:nth-child(3),
+    .template-preview-template7 .thumbnail-panel:nth-child(4) {
+      grid-row: 2;
+    }
+
+    .template-preview-template8 .thumbnail-panel:first-child,
+    .template-preview-template8 .thumbnail-panel:nth-child(2) {
+      grid-row: 1;
+    }
+    .template-preview-template8 .thumbnail-panel:nth-child(3),
+    .template-preview-template8 .thumbnail-panel:nth-child(4) {
+      grid-row: 2;
+    }
+
+    .template-preview-template9 .thumbnail-panel:nth-child(2) {
+      grid-row: span 2;
+      grid-column: 2;
+    }
+    .template-preview-template9 .thumbnail-panel:nth-child(4) {
+      grid-column: span 2;
+    }
+
+    .template-preview-template10 .thumbnail-panel:first-child {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .template-preview-template10 .thumbnail-panel:nth-child(2) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .template-preview-template10 .thumbnail-panel:nth-child(3) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    .template-preview-template10 .thumbnail-panel:nth-child(4) {
+      grid-column: 3;
+      grid-row: 2;
     }
   </style>
 </head>
@@ -429,23 +534,23 @@
       
       <div class="image-preview">
         <div class="preview-item">
-          <img src="/api/placeholder/100/100" alt="1.png" class="preview-image" data-image="1.png">
+          <img src="1.png" alt="1.png" class="preview-image" data-image="1.png" crossorigin="anonymous">
           <div>1.png</div>
         </div>
         <div class="preview-item">
-          <img src="/api/placeholder/100/100" alt="2.png" class="preview-image" data-image="2.png">
+          <img src="2.png" alt="2.png" class="preview-image" data-image="2.png" crossorigin="anonymous">
           <div>2.png</div>
         </div>
         <div class="preview-item">
-          <img src="/api/placeholder/100/100" alt="3.png" class="preview-image" data-image="3.png">
+          <img src="3.png" alt="3.png" class="preview-image" data-image="3.png" crossorigin="anonymous">
           <div>3.png</div>
         </div>
         <div class="preview-item">
-          <img src="/api/placeholder/100/100" alt="4.png" class="preview-image" data-image="4.png">
+          <img src="4.png" alt="4.png" class="preview-image" data-image="4.png" crossorigin="anonymous">
           <div>4.png</div>
         </div>
         <div class="preview-item">
-          <img src="/api/placeholder/100/100" alt="5.png" class="preview-image" data-image="5.png">
+          <img src="5.png" alt="5.png" class="preview-image" data-image="5.png" crossorigin="anonymous">
           <div>5.png</div>
         </div>
       </div>
@@ -453,12 +558,34 @@
   </div>
 
   <script>
+    // グローバル変数として必要なAPIを定義（ブラウザサポート用）
+    window.createObjectURL = (window.URL || window.webkitURL || {}).createObjectURL || function(){};
+    window.Blob = window.Blob || function(){};
+
     document.addEventListener('DOMContentLoaded', function() {
       // 状態管理
       let currentStep = 1;
       let currentTemplate = null;
       let currentPanel = null;
-
+      
+      // 画像プリロード
+      const preloadImages = ['1.png', '2.png', '3.png', '4.png', '5.png'];
+      const imageCache = {};
+      
+      // 画像をプリロード
+      preloadImages.forEach(src => {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // CORS対応を追加
+        img.src = src;
+        imageCache[src] = img;
+        img.onload = () => console.log(`画像プリロード完了: ${src}`);
+        img.onerror = () => {
+          console.error(`画像プリロード失敗: ${src}、相対パスを試します`);
+          // ローカルでの開発時のフォールバック
+          img.src = './' + src;
+        };
+      });
+      
       // 要素の取得
       const templateSelectionScreen = document.getElementById('template-selection-screen');
       const mangaEditorScreen = document.getElementById('manga-editor-screen');
@@ -479,116 +606,431 @@
       const line1 = document.getElementById('line1');
       const line2 = document.getElementById('line2');
 
-      // テンプレートデータの読み込み
-      fetch('templates/templates.json')
-        .then(response => response.json())
-        .then(data => {
-          // テンプレートカードの作成
-          data.templates.forEach(template => {
-            const templateCard = document.createElement('div');
-            templateCard.className = 'template-card';
-            templateCard.dataset.templateId = template.id;
-            
-            // サムネイルがない場合の代替表示
-            const thumbnailHTML = `
-              <div class="template-thumbnail">
-                <div class="thumbnail-placeholder">
-                  <div class="thumbnail-panel"></div>
-                  <div class="thumbnail-panel"></div>
-                  <div class="thumbnail-panel"></div>
-                  <div class="thumbnail-panel"></div>
-                </div>
-              </div>
-            `;
-            
-            templateCard.innerHTML = `
-              ${thumbnailHTML}
-              <div class="template-info">
-                <div class="template-title">${template.title}</div>
-                <div class="template-description">${template.description}</div>
-              </div>
-            `;
-            
-            // テンプレートクリック時の処理
-            templateCard.addEventListener('click', () => {
-              loadTemplate(template.id);
-            });
-            
-            templateGrid.appendChild(templateCard);
-          });
-        })
-        .catch(error => {
-          console.error('テンプレートの読み込みに失敗しました:', error);
-          alert('テンプレートの読み込みに失敗しました。詳細はコンソールを確認してください。');
-        });
+      // テンプレートデータをインラインで定義（ファイル読み込みエラー対策）
+      const templatesData = {
+        "templates": [
+          {
+            "id": "template1",
+            "title": "標準4コマ",
+            "description": "標準的な上下2段の4コマレイアウト",
+            "thumbnail": "thumbnails/template1.png"
+          },
+          {
+            "id": "template2",
+            "title": "縦4コマ",
+            "description": "縦に並んだ伝統的な4コマレイアウト",
+            "thumbnail": "thumbnails/template2.png"
+          },
+          {
+            "id": "template3",
+            "title": "大小混合",
+            "description": "左側に大きなコマ、右側に3つの小さなコマ",
+            "thumbnail": "thumbnails/template3.png"
+          },
+          {
+            "id": "template4",
+            "title": "ダイナミックレイアウト",
+            "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
+            "thumbnail": "thumbnails/template4.png"
+          },
+          {
+            "id": "template5",
+            "title": "横4コマ",
+            "description": "横に並んだ4コマレイアウト",
+            "thumbnail": "thumbnails/template5.png"
+          },
+          {
+            "id": "template6",
+            "title": "階段レイアウト",
+            "description": "階段状に配置された4コマレイアウト",
+            "thumbnail": "thumbnails/template6.png"
+          },
+          {
+            "id": "template7",
+            "title": "T字型レイアウト",
+            "description": "T字型に配置された4コマレイアウト",
+            "thumbnail": "thumbnails/template7.png"
+          },
+          {
+            "id": "template8",
+            "title": "Z字型レイアウト",
+            "description": "Z字型に配置された4コマレイアウト",
+            "thumbnail": "thumbnails/template8.png"
+          },
+          {
+            "id": "template9",
+            "title": "中央フォーカス",
+            "description": "中央に大きなコマを配置した4コマレイアウト",
+            "thumbnail": "thumbnails/template9.png"
+          },
+          {
+            "id": "template10",
+            "title": "十字型レイアウト",
+            "description": "十字型に配置された4コマレイアウト",
+            "thumbnail": "thumbnails/template10.png"
+          }
+        ]
+      };
 
-      // テンプレート読み込み処理
-      function loadTemplate(templateId) {
-        fetch(`templates/${templateId}.json`)
-          .then(response => response.json())
-          .then(template => {
-            // テンプレートを保存
-            currentTemplate = template;
+      // テンプレートデータのマッピング（ファイル読み込みエラー対策）
+      const templateDefinitions = {
+        "template1": {
+          "title": "標準4コマ",
+          "description": "標準的な上下2段の4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 50, "height": 50 },
+            { "id": "panel2", "top": 0, "left": 50, "width": 50, "height": 50 },
+            { "id": "panel3", "top": 50, "left": 0, "width": 50, "height": 50 },
+            { "id": "panel4", "top": 50, "left": 50, "width": 50, "height": 50 }
+          ]
+        },
+        "template2": {
+          "title": "縦4コマ",
+          "description": "縦に並んだ伝統的な4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 100, "height": 25 },
+            { "id": "panel2", "top": 25, "left": 0, "width": 100, "height": 25 },
+            { "id": "panel3", "top": 50, "left": 0, "width": 100, "height": 25 },
+            { "id": "panel4", "top": 75, "left": 0, "width": 100, "height": 25 }
+          ]
+        },
+        "template3": {
+          "title": "大小混合",
+          "description": "左側に大きなコマ、右側に3つの小さなコマ",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 60, "height": 100 },
+            { "id": "panel2", "top": 0, "left": 60, "width": 40, "height": 33 },
+            { "id": "panel3", "top": 33, "left": 60, "width": 40, "height": 33 },
+            { "id": "panel4", "top": 66, "left": 60, "width": 40, "height": 34 }
+          ]
+        },
+        "template4": {
+          "title": "ダイナミックレイアウト",
+          "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 70, "height": 70 },
+            { "id": "panel2", "top": 0, "left": 70, "width": 30, "height": 35 },
+            { "id": "panel3", "top": 35, "left": 70, "width": 30, "height": 35 },
+            { "id": "panel4", "top": 70, "left": 0, "width": 100, "height": 30 }
+          ]
+        },
+        "template5": {
+          "title": "横4コマ",
+          "description": "横に並んだ4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 25, "height": 100 },
+            { "id": "panel2", "top": 0, "left": 25, "width": 25, "height": 100 },
+            { "id": "panel3", "top": 0, "left": 50, "width": 25, "height": 100 },
+            { "id": "panel4", "top": 0, "left": 75, "width": 25, "height": 100 }
+          ]
+        },
+        "template6": {
+          "title": "階段レイアウト",
+          "description": "階段状に配置された4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 75, "height": 25 },
+            { "id": "panel2", "top": 25, "left": 25, "width": 75, "height": 25 },
+            { "id": "panel3", "top": 50, "left": 0, "width": 75, "height": 25 },
+            { "id": "panel4", "top": 75, "left": 25, "width": 75, "height": 25 }
+          ]
+        },
+        "template7": {
+          "title": "T字型レイアウト",
+          "description": "T字型に配置された4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 100, "height": 40 },
+            { "id": "panel2", "top": 40, "left": 0, "width": 33, "height": 60 },
+            { "id": "panel3", "top": 40, "left": 33, "width": 34, "height": 60 },
+            { "id": "panel4", "top": 40, "left": 67, "width": 33, "height": 60 }
+          ]
+        },
+        "template8": {
+          "title": "Z字型レイアウト",
+          "description": "Z字型に配置された4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 60, "height": 40 },
+            { "id": "panel2", "top": 0, "left": 60, "width": 40, "height": 40 },
+            { "id": "panel3", "top": 40, "left": 0, "width": 40, "height": 60 },
+            { "id": "panel4", "top": 40, "left": 40, "width": 60, "height": 60 }
+          ]
+        },
+        "template9": {
+          "title": "中央フォーカス",
+          "description": "中央に大きなコマを配置した4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 0, "width": 40, "height": 40 },
+            { "id": "panel2", "top": 0, "left": 40, "width": 60, "height": 70 },
+            { "id": "panel3", "top": 40, "left": 0, "width": 40, "height": 30 },
+            { "id": "panel4", "top": 70, "left": 0, "width": 100, "height": 30 }
+          ]
+        },
+        "template10": {
+          "title": "十字型レイアウト",
+          "description": "十字型に配置された4コマレイアウト",
+          "panels": [
+            { "id": "panel1", "top": 0, "left": 30, "width": 40, "height": 45 },
+            { "id": "panel2", "top": 45, "left": 0, "width": 30, "height": 55 },
+            { "id": "panel3", "top": 45, "left": 30, "width": 40, "height": 55 },
+            { "id": "panel4", "top": 45, "left": 70, "width": 30, "height": 55 }
+          ]
+        }
+      };
+
+      // テンプレートデータの表示
+      console.log('テンプレート一覧を表示します');
+      // テンプレートカードの作成
+      templatesData.templates.forEach(template => {
+        const templateCard = document.createElement('div');
+        templateCard.className = 'template-card';
+        templateCard.dataset.templateId = template.id;
+        
+        // サムネイルがない場合の代替表示
+        const thumbnailHTML = `
+          <div class="template-thumbnail">
+            <div class="thumbnail-placeholder template-preview-${template.id}">
+              <div class="thumbnail-panel"></div>
+              <div class="thumbnail-panel"></div>
+              <div class="thumbnail-panel"></div>
+              <div class="thumbnail-panel"></div>
+            </div>
+          </div>
+        `;
+        
+        templateCard.innerHTML = `
+          ${thumbnailHTML}
+          <div class="template-info">
+            <div class="template-title">${template.title}</div>
+            <div class="template-description">${template.description}</div>
+          </div>
+        `;
+        
+        // テンプレートクリック時の処理
+        templateCard.addEventListener('click', () => {
+          console.log('テンプレートカードがクリックされました:', template.id);
+          try {
+            loadTemplateFromDefinition(template.id);
+          } catch (error) {
+            console.error('テンプレート読み込み中にエラーが発生しました:', error);
+            alert('テンプレートの読み込みに失敗しました。デフォルトテンプレートを使用します。');
+            useDefaultTemplate();
+          }
+        });
+        
+        templateGrid.appendChild(templateCard);
+      });
+
+      // インラインテンプレートから読み込む処理
+      function loadTemplateFromDefinition(templateId) {
+        console.log('テンプレート読み込み開始:', templateId);
+        
+        if (templateDefinitions[templateId]) {
+          const template = templateDefinitions[templateId];
+          console.log('読み込んだテンプレート:', template);
+          
+          // テンプレートを保存
+          currentTemplate = template;
+          
+          // ステップ更新
+          updateStep(2);
+          
+          // 漫画コンテナをクリア
+          mangaContainer.innerHTML = '';
+          
+          // パネルの作成
+          template.panels.forEach(panel => {
+            const panelElement = document.createElement('div');
+            panelElement.id = panel.id;
+            panelElement.className = 'panel';
+            panelElement.style.top = `${panel.top}%`;
+            panelElement.style.left = `${panel.left}%`;
+            panelElement.style.width = `${panel.width}%`;
+            panelElement.style.height = `${panel.height}%`;
+            panelElement.style.backgroundSize = 'cover';
+            panelElement.style.backgroundPosition = 'center';
             
-            // ステップ更新
-            updateStep(2);
+            // 位置情報をデータ属性として保存
+            panelElement.dataset.top = `${panel.top}%`;
+            panelElement.dataset.left = `${panel.left}%`;
+            panelElement.dataset.width = `${panel.width}%`;
+            panelElement.dataset.height = `${panel.height}%`;
             
-            // 漫画コンテナをクリア
-            mangaContainer.innerHTML = '';
-            
-            // パネルの作成
-            template.panels.forEach(panel => {
-              const panelElement = document.createElement('div');
-              panelElement.id = panel.id;
-              panelElement.className = 'panel';
-              panelElement.style.top = `${panel.top}%`;
-              panelElement.style.left = `${panel.left}%`;
-              panelElement.style.width = `${panel.width}%`;
-              panelElement.style.height = `${panel.height}%`;
-              
-              // パネルクリック時の処理を追加
-              panelElement.addEventListener('click', function() {
-                selectPanel(this);
-              });
-              
-              mangaContainer.appendChild(panelElement);
+            // パネルクリック時の処理を追加
+            panelElement.addEventListener('click', function() {
+              selectPanel(this);
             });
             
-            // 最初のパネルを選択
-            currentPanel = document.getElementById('panel1');
-            currentPanel.classList.add('selected');
-            
-            // 画面切り替え
-            templateSelectionScreen.classList.remove('active');
-            mangaEditorScreen.classList.add('active');
-          })
-          .catch(error => {
-            console.error('テンプレートの読み込みに失敗しました:', error);
-            alert('テンプレートの読み込みに失敗しました。詳細はコンソールを確認してください。');
+            mangaContainer.appendChild(panelElement);
           });
+          
+          // 最初のパネルを選択
+          currentPanel = document.getElementById('panel1');
+          currentPanel.classList.add('selected');
+          
+          // 画面切り替え
+          templateSelectionScreen.classList.remove('active');
+          mangaEditorScreen.classList.add('active');
+          
+          // 強制的な表示/非表示の設定
+          templateSelectionScreen.style.display = 'none';
+          mangaEditorScreen.style.display = 'block';
+        } else {
+          console.error(`テンプレート ${templateId} が見つかりません`);
+          alert(`テンプレート ${templateId} が見つかりません。デフォルトテンプレートを使用します。`);
+          useDefaultTemplate();
+        }
+      }
+
+      // デフォルトテンプレートを使用する関数
+      function useDefaultTemplate() {
+        // 標準的な4コマ漫画レイアウトのテンプレート
+        const defaultTemplateData = {
+          title: "標準4コマ（フォールバック）",
+          description: "標準的な上下2段の4コマレイアウト",
+          panels: [
+            {
+              id: "panel1",
+              top: 0,
+              left: 0,
+              width: 50,
+              height: 50
+            },
+            {
+              id: "panel2",
+              top: 0,
+              left: 50,
+              width: 50,
+              height: 50
+            },
+            {
+              id: "panel3",
+              top: 50,
+              left: 0,
+              width: 50,
+              height: 50
+            },
+            {
+              id: "panel4",
+              top: 50,
+              left: 50,
+              width: 50,
+              height: 50
+            }
+          ]
+        };
+        
+        // テンプレートを保存
+        currentTemplate = defaultTemplateData;
+        
+        // ステップ更新
+        updateStep(2);
+        
+        // 漫画コンテナをクリア
+        mangaContainer.innerHTML = '';
+        
+        // パネルの作成
+        defaultTemplateData.panels.forEach(panel => {
+          const panelElement = document.createElement('div');
+          panelElement.id = panel.id;
+          panelElement.className = 'panel';
+          panelElement.style.top = `${panel.top}%`;
+          panelElement.style.left = `${panel.left}%`;
+          panelElement.style.width = `${panel.width}%`;
+          panelElement.style.height = `${panel.height}%`;
+          panelElement.style.backgroundSize = 'cover';
+          panelElement.style.backgroundPosition = 'center';
+          
+          // 位置情報をデータ属性として保存
+          panelElement.dataset.top = `${panel.top}%`;
+          panelElement.dataset.left = `${panel.left}%`;
+          panelElement.dataset.width = `${panel.width}%`;
+          panelElement.dataset.height = `${panel.height}%`;
+          
+          // パネルクリック時の処理を追加
+          panelElement.addEventListener('click', function() {
+            selectPanel(this);
+          });
+          
+          mangaContainer.appendChild(panelElement);
+        });
+        
+        // 最初のパネルを選択
+        currentPanel = document.getElementById('panel1');
+        currentPanel.classList.add('selected');
+        
+        // 画面切り替え
+        templateSelectionScreen.classList.remove('active');
+        mangaEditorScreen.classList.add('active');
+        
+        // 強制的な表示/非表示の設定
+        templateSelectionScreen.style.display = 'none';
+        mangaEditorScreen.style.display = 'block';
       }
 
       // パネル選択処理
       function selectPanel(panel) {
         if (currentPanel) {
           currentPanel.classList.remove('selected');
+          // 通常の枠線に戻す
+          currentPanel.style.border = '2px solid #000';
         }
         
         currentPanel = panel;
         currentPanel.classList.add('selected');
+        // 赤い点線の枠線に変更
+        currentPanel.style.border = '2px dashed #ff0000';
         
         // セレクトボックスの値を更新
         panelSelect.value = currentPanel.id;
         
-        // 背景画像があれば、その画像をセレクトボックスで選択
-        const backgroundImage = currentPanel.style.backgroundImage;
-        if (backgroundImage) {
-          const imageName = backgroundImage.split('/').pop().replace('")', '');
-          imageSelect.value = imageName;
+        // 画像があればそれをセレクトボックスで選択
+        if (currentPanel.style.backgroundImage && currentPanel.style.backgroundImage !== 'none') {
+          // 背景画像からファイル名を抽出
+          const bgImageUrl = currentPanel.style.backgroundImage;
+          const match = bgImageUrl.match(/url\(['"]?([^'"]+)['"]?\)/i);
+          if (match && match[1]) {
+            const imagePath = match[1];
+            const imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+            imageSelect.value = imageName;
+          } else {
+            imageSelect.value = '';
+          }
         } else {
           imageSelect.value = '';
         }
       }
+
+      // パネル選択時の処理
+      panelSelect.addEventListener('change', function() {
+        // 現在の選択を解除
+        if (currentPanel) {
+          currentPanel.classList.remove('selected');
+          // 通常の枠線に戻す
+          currentPanel.style.border = '2px solid #000';
+        }
+        
+        // 新しいパネルを選択
+        const panelId = this.value;
+        currentPanel = document.getElementById(panelId);
+        currentPanel.classList.add('selected');
+        // 赤い点線の枠線に変更
+        currentPanel.style.border = '2px dashed #ff0000';
+        
+        // 画像があればそれをセレクトボックスで選択
+        if (currentPanel.style.backgroundImage && currentPanel.style.backgroundImage !== 'none') {
+          // 背景画像からファイル名を抽出
+          const bgImageUrl = currentPanel.style.backgroundImage;
+          const match = bgImageUrl.match(/url\(['"]?([^'"]+)['"]?\)/i);
+          if (match && match[1]) {
+            const imagePath = match[1];
+            const imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+            imageSelect.value = imageName;
+          } else {
+            imageSelect.value = '';
+          }
+        } else {
+          imageSelect.value = '';
+        }
+      });
 
       // ステップ更新処理
       function updateStep(step) {
@@ -622,52 +1064,63 @@
         updateStep(1);
         mangaEditorScreen.classList.remove('active');
         templateSelectionScreen.classList.add('active');
+        
+        // 強制的な表示/非表示の設定
+        mangaEditorScreen.style.display = 'none';
+        templateSelectionScreen.style.display = 'block';
       });
 
-      // パネル選択時の処理
-      panelSelect.addEventListener('change', function() {
-        // 現在の選択を解除
-        if (currentPanel) {
-          currentPanel.classList.remove('selected');
-        }
-        
-        // 新しいパネルを選択
-        const panelId = this.value;
-        currentPanel = document.getElementById(panelId);
-        currentPanel.classList.add('selected');
-        
-        // 選択されているパネルの背景画像があれば、その画像をセレクトボックスで選択
-        const backgroundImage = currentPanel.style.backgroundImage;
-        if (backgroundImage) {
-          const imageName = backgroundImage.split('/').pop().replace('")', '');
-          imageSelect.value = imageName;
-        } else {
-          imageSelect.value = '';
-        }
-      });
-      
       // 画像適用ボタンの処理
       applyBtn.addEventListener('click', function() {
         const selectedImage = imageSelect.value;
+        console.log('画像適用:', selectedImage);
+        
+        // 既存の画像があれば削除
+        const existingImages = currentPanel.querySelectorAll('img');
+        existingImages.forEach(img => img.remove());
+        
         if (selectedImage) {
-          currentPanel.style.backgroundImage = `url(${selectedImage})`;
-        } else {
-          currentPanel.style.backgroundImage = 'none';
-        }
-        
-        // すべてのパネルに画像が設定されているか確認
-        const panels = document.querySelectorAll('.panel');
-        let allPanelsHaveImages = true;
-        
-        panels.forEach(panel => {
-          if (!panel.style.backgroundImage || panel.style.backgroundImage === 'none') {
-            allPanelsHaveImages = false;
+          // パネル背景色を変更して視覚的に確認できるようにする
+          currentPanel.style.backgroundColor = '#e1f5fe';
+          
+          // 背景画像として設定する（CSSの方法）
+          currentPanel.style.backgroundImage = `url('${selectedImage}')`;
+          currentPanel.style.backgroundSize = 'cover';
+          currentPanel.style.backgroundPosition = 'center';
+          
+          // インラインでHTMLタグも追加しておく（念のため）
+          currentPanel.innerHTML = `
+            <img src="${selectedImage}" 
+                 alt="${selectedImage}" 
+                 crossorigin="anonymous"
+                 style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1;">
+            <div style="position:absolute; bottom:5px; right:5px; background:#ff0000; color:#fff; padding:2px 5px; font-size:10px; z-index:2;">
+              ${selectedImage}
+            </div>
+          `;
+          
+          console.log('画像を追加しました:', selectedImage);
+          
+          // すべてのパネルに画像が設定されているか確認
+          const panels = document.querySelectorAll('.panel');
+          let allPanelsHaveImages = true;
+          
+          panels.forEach(panel => {
+            if (panel.querySelector('img') === null && 
+                (!panel.style.backgroundImage || panel.style.backgroundImage === 'none')) {
+              allPanelsHaveImages = false;
+            }
+          });
+          
+          // すべてのパネルに画像が設定されていれば次のステップに進む
+          if (allPanelsHaveImages) {
+            updateStep(3);
           }
-        });
-        
-        // すべてのパネルに画像が設定されていれば次のステップに進む
-        if (allPanelsHaveImages) {
-          updateStep(3);
+        } else {
+          // 画像なしの場合
+          currentPanel.style.backgroundImage = 'none';
+          currentPanel.style.backgroundColor = '';
+          currentPanel.innerHTML = '';
         }
       });
       
@@ -675,8 +1128,21 @@
       resetBtn.addEventListener('click', function() {
         const panels = document.querySelectorAll('.panel');
         panels.forEach(panel => {
+          // 内容をクリア
+          panel.innerHTML = '';
+          // 背景画像もクリア
           panel.style.backgroundImage = 'none';
+          // 背景色をリセット
+          panel.style.backgroundColor = '';
+          
+          // 選択状態のボーダーを維持
+          if (panel.classList.contains('selected')) {
+            panel.style.border = '2px dashed #ff0000';
+          } else {
+            panel.style.border = '2px solid #000';
+          }
         });
+        
         imageSelect.value = '';
         updateStep(2); // ステップを2に戻す
       });
@@ -686,16 +1152,40 @@
       previewImages.forEach(img => {
         img.addEventListener('click', function() {
           const imageName = this.dataset.image;
+          console.log('プレビュー画像クリック:', imageName);
+          
+          // 画像セレクトボックスの値を更新
           imageSelect.value = imageName;
+          
           if (currentPanel) {
-            currentPanel.style.backgroundImage = `url(${imageName})`;
+            // パネル背景色を変更して視覚的に確認できるようにする
+            currentPanel.style.backgroundColor = '#e1f5fe';
+            
+            // 背景画像として設定する（CSSの方法）
+            currentPanel.style.backgroundImage = `url('${imageName}')`;
+            currentPanel.style.backgroundSize = 'cover';
+            currentPanel.style.backgroundPosition = 'center';
+            
+            // インラインでHTMLタグも追加しておく（念のため）
+            currentPanel.innerHTML = `
+              <img src="${imageName}" 
+                   alt="${imageName}" 
+                   crossorigin="anonymous"
+                   style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1;">
+              <div style="position:absolute; bottom:5px; right:5px; background:#ff0000; color:#fff; padding:2px 5px; font-size:10px; z-index:2;">
+                ${imageName}
+              </div>
+            `;
+            
+            console.log('画像を追加しました:', imageName);
             
             // すべてのパネルに画像が設定されているか確認
             const panels = document.querySelectorAll('.panel');
             let allPanelsHaveImages = true;
             
             panels.forEach(panel => {
-              if (!panel.style.backgroundImage || panel.style.backgroundImage === 'none') {
+              if (panel.querySelector('img') === null && 
+                  (!panel.style.backgroundImage || panel.style.backgroundImage === 'none')) {
                 allPanelsHaveImages = false;
               }
             });
@@ -713,47 +1203,172 @@
         // ローディングオーバーレイを表示
         loadingOverlay.style.display = 'flex';
         
-        // 少し遅延させてUIの更新を確実に
-        setTimeout(() => {
-          // 選択クラスを一時的に削除
-          if (currentPanel) {
-            currentPanel.classList.remove('selected');
-          }
+        try {
+          // パネルの枠線を一時的に非表示にする
+          const panels = document.querySelectorAll('.panel');
+          const originalStyles = [];
           
-          // html2canvasを使用して漫画コンテナをキャプチャ
-          html2canvas(mangaContainer, {
-            backgroundColor: "#ffffff",
-            scale: 2, // 高解像度化
-            logging: false,
-            useCORS: true, // 画像読み込みのためのCORS対応
-          }).then(canvas => {
-            // 選択クラスを戻す
-            if (currentPanel) {
-              currentPanel.classList.add('selected');
-            }
+          // 元のコンテナスタイルを保存
+          const containerRect = mangaContainer.getBoundingClientRect();
+          const containerOriginalStyles = {
+            width: mangaContainer.style.width,
+            height: mangaContainer.style.height,
+            position: mangaContainer.style.position,
+            border: mangaContainer.style.border
+          };
+          
+          // すべてのパネルの状態を保存
+          panels.forEach(panel => {
+            originalStyles.push({
+              element: panel,
+              border: panel.style.border,
+              selected: panel.classList.contains('selected'),
+              backgroundColor: panel.style.backgroundColor
+            });
             
-            // canvasをPNG形式に変換
-            const imgData = canvas.toDataURL('image/png');
-            
-            // ダウンロードリンクを作成
-            const link = document.createElement('a');
-            link.href = imgData;
-            const templateTitle = currentTemplate ? currentTemplate.title : '漫画';
-            link.download = `${templateTitle}-` + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.png';
-            
-            // リンクをクリックしてダウンロード開始
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // ローディングオーバーレイを非表示
-            loadingOverlay.style.display = 'none';
-          }).catch(error => {
-            console.error('画像の出力に失敗しました:', error);
-            alert('画像の出力に失敗しました。詳細はコンソールを確認してください。');
-            loadingOverlay.style.display = 'none';
+            // 選択状態を解除し枠線を非表示に
+            panel.classList.remove('selected');
+            panel.style.border = 'none';
+            // 背景を白に統一（透明部分を防ぐ）
+            panel.style.backgroundColor = 'white';
           });
-        }, 100);
+          
+          // キャプチャのために固定サイズに設定（重要: アスペクト比を保持）
+          const CANVAS_SIZE = 1000; // 固定サイズ（大きめに）
+          mangaContainer.style.width = CANVAS_SIZE + 'px';
+          mangaContainer.style.height = CANVAS_SIZE + 'px';
+          mangaContainer.style.position = 'relative';
+          mangaContainer.style.border = 'none';
+          
+          // テンプレート情報を取得
+          const templateInfo = currentTemplate || {
+            title: '漫画',
+            panels: []
+          };
+          
+          console.log('出力開始: キャンバスサイズ', CANVAS_SIZE);
+          
+          // html2canvasの設定
+          const h2cOptions = {
+            backgroundColor: "#ffffff",
+            scale: 1, // スケールを1に固定
+            logging: true,
+            useCORS: true,
+            allowTaint: true,
+            width: CANVAS_SIZE,
+            height: CANVAS_SIZE,
+            onclone: function(clonedDoc) {
+              console.log('クローン作成');
+              const clonedContainer = clonedDoc.getElementById('manga-container');
+              const clonedPanels = clonedContainer.querySelectorAll('.panel');
+              
+              // クローン内のすべてのパネルの枠線を完全に削除
+              clonedPanels.forEach(panel => {
+                panel.style.border = 'none';
+              });
+              
+              return clonedDoc;
+            }
+          };
+          
+          // 処理の遅延を長めに設定（DOM更新を確実に）
+          setTimeout(function() {
+            console.log('キャプチャ開始');
+            
+            // html2canvasを使用して漫画コンテナをキャプチャ
+            html2canvas(mangaContainer, h2cOptions).then(function(canvas) {
+              console.log('キャンバス生成完了', canvas.width, 'x', canvas.height);
+              
+              try {
+                // キャンバスをPNG形式に変換
+                canvas.toBlob(function(blob) {
+                  if (!blob) {
+                    throw new Error('Blobの生成に失敗しました');
+                  }
+                  
+                  // ファイル名を生成
+                  const templateTitle = templateInfo.title || '漫画';
+                  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                  const fileName = `${templateTitle}-${timestamp}.png`;
+                  
+                  console.log('Blob生成完了:', blob.size, 'バイト');
+                  
+                  // FileSaver.jsを使用
+                  try {
+                    saveAs(blob, fileName);
+                    console.log('FileSaver.jsでの保存成功');
+                  } catch (fsError) {
+                    console.error('FileSaver.js保存エラー:', fsError);
+                    
+                    // 代替方法: URL.createObjectURL
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    console.log('代替方法での保存成功');
+                  }
+                }, 'image/png', 1.0);
+              } catch (e) {
+                console.error('PNG変換エラー:', e);
+                
+                // フォールバック: DataURL使用
+                try {
+                  const imgData = canvas.toDataURL('image/png');
+                  console.log('DataURL生成完了:', imgData.substring(0, 50) + '...');
+                  
+                  const templateTitle = templateInfo.title || '漫画';
+                  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                  
+                  const link = document.createElement('a');
+                  link.href = imgData;
+                  link.download = `${templateTitle}-${timestamp}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  
+                  console.log('DataURLでの保存成功');
+                } catch (dataUrlError) {
+                  console.error('DataURL変換エラー:', dataUrlError);
+                  alert('画像の出力に失敗しました。開発者ツールのコンソールを確認してください。');
+                }
+              }
+            }).catch(function(error) {
+              console.error('html2canvas処理エラー:', error);
+              alert('画像のキャプチャに失敗しました: ' + error.message);
+            }).finally(function() {
+              console.log('処理完了、元の状態に戻します');
+              
+              // 必ず元のスタイルに戻す
+              panels.forEach((panel, index) => {
+                if (index < originalStyles.length) {
+                  const style = originalStyles[index];
+                  panel.style.border = style.border;
+                  panel.style.backgroundColor = style.backgroundColor;
+                  if (style.selected) {
+                    panel.classList.add('selected');
+                  }
+                }
+              });
+              
+              // コンテナのスタイルを元に戻す
+              mangaContainer.style.width = containerOriginalStyles.width;
+              mangaContainer.style.height = containerOriginalStyles.height;
+              mangaContainer.style.position = containerOriginalStyles.position;
+              mangaContainer.style.border = containerOriginalStyles.border;
+              
+              // ローディングオーバーレイを非表示
+              loadingOverlay.style.display = 'none';
+            });
+          }, 1500); // 1.5秒の遅延
+        } catch (criticalError) {
+          console.error('致命的なエラー:', criticalError);
+          alert('予期せぬエラーが発生しました: ' + criticalError.message);
+          loadingOverlay.style.display = 'none';
+        }
       });
     });
   </script>
