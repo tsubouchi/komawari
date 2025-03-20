@@ -1439,13 +1439,21 @@
               // 画像を取得
               const img = panel.querySelector('img');
               if (img) {
+                // 矩形用のクリッピングパスポイントを生成
+                const rectPoints = [
+                  `${validLeft},${validTop}`,                           // 左上
+                  `${validLeft + validWidth},${validTop}`,              // 右上
+                  `${validLeft + validWidth},${validTop + validHeight}`, // 右下
+                  `${validLeft},${validTop + validHeight}`              // 左下
+                ];
+                
                 // SVG用クリッピングパスを定義
                 const clipPathId = `clip_${panel.id}`;
                 const clipPathElement = document.createElementNS(svgNS, "clipPath");
                 clipPathElement.setAttribute("id", clipPathId);
                 
                 const clipPathPolygon = document.createElementNS(svgNS, "polygon");
-                clipPathPolygon.setAttribute("points", points.join(" "));
+                clipPathPolygon.setAttribute("points", rectPoints.join(" "));
                 clipPathElement.appendChild(clipPathPolygon);
                 svg.appendChild(clipPathElement);
                 
