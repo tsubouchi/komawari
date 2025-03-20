@@ -606,218 +606,114 @@
       const line1 = document.getElementById('line1');
       const line2 = document.getElementById('line2');
 
-      // テンプレートデータをインラインで定義（ファイル読み込みエラー対策）
-      const templatesData = {
-        "templates": [
-          {
-            "id": "template1",
-            "title": "標準4コマ",
-            "description": "標準的な上下2段の4コマレイアウト",
-            "thumbnail": "thumbnails/template1.png"
-          },
-          {
-            "id": "template2",
-            "title": "縦4コマ",
-            "description": "縦に並んだ伝統的な4コマレイアウト",
-            "thumbnail": "thumbnails/template2.png"
-          },
-          {
-            "id": "template3",
-            "title": "大小混合",
-            "description": "左側に大きなコマ、右側に3つの小さなコマ",
-            "thumbnail": "thumbnails/template3.png"
-          },
-          {
-            "id": "template4",
-            "title": "ダイナミックレイアウト",
-            "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
-            "thumbnail": "thumbnails/template4.png"
-          },
-          {
-            "id": "template5",
-            "title": "横4コマ",
-            "description": "横に並んだ4コマレイアウト",
-            "thumbnail": "thumbnails/template5.png"
-          },
-          {
-            "id": "template6",
-            "title": "階段レイアウト",
-            "description": "階段状に配置された4コマレイアウト",
-            "thumbnail": "thumbnails/template6.png"
-          },
-          {
-            "id": "template7",
-            "title": "T字型レイアウト",
-            "description": "T字型に配置された4コマレイアウト",
-            "thumbnail": "thumbnails/template7.png"
-          },
-          {
-            "id": "template8",
-            "title": "Z字型レイアウト",
-            "description": "Z字型に配置された4コマレイアウト",
-            "thumbnail": "thumbnails/template8.png"
-          },
-          {
-            "id": "template9",
-            "title": "中央フォーカス",
-            "description": "中央に大きなコマを配置した4コマレイアウト",
-            "thumbnail": "thumbnails/template9.png"
-          },
-          {
-            "id": "template10",
-            "title": "十字型レイアウト",
-            "description": "十字型に配置された4コマレイアウト",
-            "thumbnail": "thumbnails/template10.png"
+      // テンプレート定義を保持するオブジェクト
+      let templateDefinitions = {};
+
+      // テンプレートデータをJSONファイルから読み込む
+      async function loadTemplatesData() {
+        try {
+          // テンプレート一覧を読み込む
+          const response = await fetch('templates/templates.json');
+          if (!response.ok) {
+            throw new Error('テンプレート一覧の読み込みに失敗しました');
           }
-        ]
-      };
-
-      // テンプレートデータのマッピング（ファイル読み込みエラー対策）
-      const templateDefinitions = {
-        "template1": {
-          "title": "標準4コマ",
-          "description": "標準的な上下2段の4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 50, "height": 50 },
-            { "id": "panel2", "top": 0, "left": 50, "width": 50, "height": 50 },
-            { "id": "panel3", "top": 50, "left": 0, "width": 50, "height": 50 },
-            { "id": "panel4", "top": 50, "left": 50, "width": 50, "height": 50 }
-          ]
-        },
-        "template2": {
-          "title": "縦4コマ",
-          "description": "縦に並んだ伝統的な4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 100, "height": 25 },
-            { "id": "panel2", "top": 25, "left": 0, "width": 100, "height": 25 },
-            { "id": "panel3", "top": 50, "left": 0, "width": 100, "height": 25 },
-            { "id": "panel4", "top": 75, "left": 0, "width": 100, "height": 25 }
-          ]
-        },
-        "template3": {
-          "title": "大小混合",
-          "description": "左側に大きなコマ、右側に3つの小さなコマ",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 60, "height": 100 },
-            { "id": "panel2", "top": 0, "left": 60, "width": 40, "height": 33 },
-            { "id": "panel3", "top": 33, "left": 60, "width": 40, "height": 33 },
-            { "id": "panel4", "top": 66, "left": 60, "width": 40, "height": 34 }
-          ]
-        },
-        "template4": {
-          "title": "ダイナミックレイアウト",
-          "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 70, "height": 70 },
-            { "id": "panel2", "top": 0, "left": 70, "width": 30, "height": 35 },
-            { "id": "panel3", "top": 35, "left": 70, "width": 30, "height": 35 },
-            { "id": "panel4", "top": 70, "left": 0, "width": 100, "height": 30 }
-          ]
-        },
-        "template5": {
-          "title": "横4コマ",
-          "description": "横に並んだ4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 25, "height": 100 },
-            { "id": "panel2", "top": 0, "left": 25, "width": 25, "height": 100 },
-            { "id": "panel3", "top": 0, "left": 50, "width": 25, "height": 100 },
-            { "id": "panel4", "top": 0, "left": 75, "width": 25, "height": 100 }
-          ]
-        },
-        "template6": {
-          "title": "階段レイアウト",
-          "description": "階段状に配置された4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 75, "height": 25 },
-            { "id": "panel2", "top": 25, "left": 25, "width": 75, "height": 25 },
-            { "id": "panel3", "top": 50, "left": 0, "width": 75, "height": 25 },
-            { "id": "panel4", "top": 75, "left": 25, "width": 75, "height": 25 }
-          ]
-        },
-        "template7": {
-          "title": "T字型レイアウト",
-          "description": "T字型に配置された4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 100, "height": 40 },
-            { "id": "panel2", "top": 40, "left": 0, "width": 33, "height": 60 },
-            { "id": "panel3", "top": 40, "left": 33, "width": 34, "height": 60 },
-            { "id": "panel4", "top": 40, "left": 67, "width": 33, "height": 60 }
-          ]
-        },
-        "template8": {
-          "title": "Z字型レイアウト",
-          "description": "Z字型に配置された4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 60, "height": 40 },
-            { "id": "panel2", "top": 0, "left": 60, "width": 40, "height": 40 },
-            { "id": "panel3", "top": 40, "left": 0, "width": 40, "height": 60 },
-            { "id": "panel4", "top": 40, "left": 40, "width": 60, "height": 60 }
-          ]
-        },
-        "template9": {
-          "title": "中央フォーカス",
-          "description": "中央に大きなコマを配置した4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 0, "width": 40, "height": 40 },
-            { "id": "panel2", "top": 0, "left": 40, "width": 60, "height": 70 },
-            { "id": "panel3", "top": 40, "left": 0, "width": 40, "height": 30 },
-            { "id": "panel4", "top": 70, "left": 0, "width": 100, "height": 30 }
-          ]
-        },
-        "template10": {
-          "title": "十字型レイアウト",
-          "description": "十字型に配置された4コマレイアウト",
-          "panels": [
-            { "id": "panel1", "top": 0, "left": 30, "width": 40, "height": 45 },
-            { "id": "panel2", "top": 45, "left": 0, "width": 30, "height": 55 },
-            { "id": "panel3", "top": 45, "left": 30, "width": 40, "height": 55 },
-            { "id": "panel4", "top": 45, "left": 70, "width": 30, "height": 55 }
-          ]
+          const templatesData = await response.json();
+          console.log('テンプレート一覧を読み込みました:', templatesData);
+          
+          // テンプレートカードを作成
+          displayTemplateCards(templatesData);
+          
+          // 各テンプレートの詳細を読み込む
+          await loadTemplateDefinitions(templatesData.templates);
+          
+          console.log('全テンプレート定義の読み込みが完了しました');
+        } catch (error) {
+          console.error('テンプレートの読み込み中にエラーが発生しました:', error);
+          alert('テンプレートの読み込みに失敗しました。デフォルトのテンプレートを使用します。');
+          // デフォルトのテンプレートを使用
+          const defaultTemplatesData = {
+            "templates": [
+              {
+                "id": "template1",
+                "title": "標準4コマ",
+                "description": "標準的な上下2段の4コマレイアウト",
+                "thumbnail": "thumbnails/template1.png"
+              }
+            ]
+          };
+          displayTemplateCards(defaultTemplatesData);
         }
-      };
-
-      // テンプレートデータの表示
-      console.log('テンプレート一覧を表示します');
-      // テンプレートカードの作成
-      templatesData.templates.forEach(template => {
-        const templateCard = document.createElement('div');
-        templateCard.className = 'template-card';
-        templateCard.dataset.templateId = template.id;
-        
-        // サムネイルがない場合の代替表示
-        const thumbnailHTML = `
-          <div class="template-thumbnail">
-            <div class="thumbnail-placeholder template-preview-${template.id}">
-              <div class="thumbnail-panel"></div>
-              <div class="thumbnail-panel"></div>
-              <div class="thumbnail-panel"></div>
-              <div class="thumbnail-panel"></div>
-            </div>
-          </div>
-        `;
-        
-        templateCard.innerHTML = `
-          ${thumbnailHTML}
-          <div class="template-info">
-            <div class="template-title">${template.title}</div>
-            <div class="template-description">${template.description}</div>
-          </div>
-        `;
-        
-        // テンプレートクリック時の処理
-        templateCard.addEventListener('click', () => {
-          console.log('テンプレートカードがクリックされました:', template.id);
+      }
+      
+      // テンプレート定義を読み込む
+      async function loadTemplateDefinitions(templates) {
+        const promises = templates.map(async (template) => {
           try {
-            loadTemplateFromDefinition(template.id);
+            const response = await fetch(`templates/${template.id}.json`);
+            if (!response.ok) {
+              throw new Error(`テンプレート ${template.id} の読み込みに失敗しました`);
+            }
+            const templateData = await response.json();
+            templateDefinitions[template.id] = templateData;
+            console.log(`テンプレート ${template.id} を読み込みました:`, templateData);
           } catch (error) {
-            console.error('テンプレート読み込み中にエラーが発生しました:', error);
-            alert('テンプレートの読み込みに失敗しました。デフォルトテンプレートを使用します。');
-            useDefaultTemplate();
+            console.error(`テンプレート ${template.id} の読み込み中にエラーが発生しました:`, error);
           }
         });
         
-        templateGrid.appendChild(templateCard);
-      });
+        // すべてのテンプレート読み込みを待機
+        await Promise.all(promises);
+      }
+      
+      // テンプレートカードを表示
+      function displayTemplateCards(templatesData) {
+        templateGrid.innerHTML = ''; // グリッドをクリア
+        console.log('テンプレート一覧を表示します');
+        
+        // テンプレートカードの作成
+        templatesData.templates.forEach(template => {
+          const templateCard = document.createElement('div');
+          templateCard.className = 'template-card';
+          templateCard.dataset.templateId = template.id;
+          
+          // サムネイルがない場合の代替表示
+          const thumbnailHTML = `
+            <div class="template-thumbnail">
+              <div class="thumbnail-placeholder template-preview-${template.id}">
+                <div class="thumbnail-panel"></div>
+                <div class="thumbnail-panel"></div>
+                <div class="thumbnail-panel"></div>
+                <div class="thumbnail-panel"></div>
+              </div>
+            </div>
+          `;
+          
+          templateCard.innerHTML = `
+            ${thumbnailHTML}
+            <div class="template-info">
+              <div class="template-title">${template.title}</div>
+              <div class="template-description">${template.description}</div>
+            </div>
+          `;
+          
+          // テンプレートクリック時の処理
+          templateCard.addEventListener('click', () => {
+            console.log('テンプレートカードがクリックされました:', template.id);
+            try {
+              loadTemplateFromDefinition(template.id);
+            } catch (error) {
+              console.error('テンプレート読み込み中にエラーが発生しました:', error);
+              alert('テンプレートの読み込みに失敗しました。デフォルトテンプレートを使用します。');
+              useDefaultTemplate();
+            }
+          });
+          
+          templateGrid.appendChild(templateCard);
+        });
+      }
+
+      // 初期化処理：テンプレートを読み込む
+      loadTemplatesData();
 
       // インラインテンプレートから読み込む処理
       function loadTemplateFromDefinition(templateId) {
@@ -886,94 +782,121 @@
       }
 
       // デフォルトテンプレートを使用する関数
-      function useDefaultTemplate() {
-        // 標準的な4コマ漫画レイアウトのテンプレート
-        const defaultTemplateData = {
-          title: "標準4コマ（フォールバック）",
-          description: "標準的な上下2段の4コマレイアウト",
-          panels: [
-            {
-              id: "panel1",
-              top: 0,
-              left: 0,
-              width: 50,
-              height: 50
-            },
-            {
-              id: "panel2",
-              top: 0,
-              left: 50,
-              width: 50,
-              height: 50
-            },
-            {
-              id: "panel3",
-              top: 50,
-              left: 0,
-              width: 50,
-              height: 50
-            },
-            {
-              id: "panel4",
-              top: 50,
-              left: 50,
-              width: 50,
-              height: 50
-            }
-          ]
-        };
-        
-        // テンプレートを保存
-        currentTemplate = defaultTemplateData;
-        
-        // ステップ更新
-        updateStep(2);
-        
-        // 漫画コンテナをクリア
-        mangaContainer.innerHTML = '';
-        
-        // パネルの作成
-        defaultTemplateData.panels.forEach(panel => {
-          const panelElement = document.createElement('div');
-          panelElement.id = panel.id;
-          panelElement.className = 'panel';
-          panelElement.style.top = `${panel.top}%`;
-          panelElement.style.left = `${panel.left}%`;
-          panelElement.style.width = `${panel.width}%`;
-          panelElement.style.height = `${panel.height}%`;
-          panelElement.style.backgroundSize = 'cover';
-          panelElement.style.backgroundPosition = 'center';
-          
-          // clipPathがある場合は適用
-          if (panel.clipPath) {
-            panelElement.style.clipPath = panel.clipPath;
+      async function useDefaultTemplate() {
+        try {
+          // 標準的な4コマ漫画レイアウトのテンプレートをファイルから読み込む
+          const response = await fetch('templates/template1.json');
+          if (!response.ok) {
+            throw new Error('デフォルトテンプレートの読み込みに失敗しました');
           }
           
-          // 位置情報をデータ属性として保存
-          panelElement.dataset.top = `${panel.top}%`;
-          panelElement.dataset.left = `${panel.left}%`;
-          panelElement.dataset.width = `${panel.width}%`;
-          panelElement.dataset.height = `${panel.height}%`;
+          const defaultTemplateData = await response.json();
+          console.log('デフォルトテンプレートを読み込みました:', defaultTemplateData);
           
-          // パネルクリック時の処理を追加
-          panelElement.addEventListener('click', function() {
-            selectPanel(this);
+          // テンプレートを保存
+          currentTemplate = defaultTemplateData;
+          
+          // ステップ更新
+          updateStep(2);
+          
+          // 漫画コンテナをクリア
+          mangaContainer.innerHTML = '';
+          
+          // パネルの作成
+          defaultTemplateData.panels.forEach(panel => {
+            const panelElement = document.createElement('div');
+            panelElement.id = panel.id;
+            panelElement.className = 'panel';
+            panelElement.style.top = `${panel.top}%`;
+            panelElement.style.left = `${panel.left}%`;
+            panelElement.style.width = `${panel.width}%`;
+            panelElement.style.height = `${panel.height}%`;
+            panelElement.style.backgroundSize = 'cover';
+            panelElement.style.backgroundPosition = 'center';
+            
+            // clipPathがある場合は適用
+            if (panel.clipPath) {
+              panelElement.style.clipPath = panel.clipPath;
+            }
+            
+            // 位置情報をデータ属性として保存
+            panelElement.dataset.top = `${panel.top}%`;
+            panelElement.dataset.left = `${panel.left}%`;
+            panelElement.dataset.width = `${panel.width}%`;
+            panelElement.dataset.height = `${panel.height}%`;
+            
+            // パネルクリック時の処理を追加
+            panelElement.addEventListener('click', function() {
+              selectPanel(this);
+            });
+            
+            mangaContainer.appendChild(panelElement);
           });
           
-          mangaContainer.appendChild(panelElement);
-        });
-        
-        // 最初のパネルを選択
-        currentPanel = document.getElementById('panel1');
-        currentPanel.classList.add('selected');
-        
-        // 画面切り替え
-        templateSelectionScreen.classList.remove('active');
-        mangaEditorScreen.classList.add('active');
-        
-        // 強制的な表示/非表示の設定
-        templateSelectionScreen.style.display = 'none';
-        mangaEditorScreen.style.display = 'block';
+          // 最初のパネルを選択
+          currentPanel = document.getElementById('panel1');
+          currentPanel.classList.add('selected');
+          
+          // 画面切り替え
+          templateSelectionScreen.classList.remove('active');
+          mangaEditorScreen.classList.add('active');
+          
+          // 強制的な表示/非表示の設定
+          templateSelectionScreen.style.display = 'none';
+          mangaEditorScreen.style.display = 'block';
+        } catch (error) {
+          console.error('デフォルトテンプレート読み込み中にエラーが発生しました:', error);
+          
+          // ハードコードされたフォールバックテンプレート
+          const fallbackTemplateData = {
+            title: "標準4コマ（フォールバック）",
+            description: "標準的な上下2段の4コマレイアウト",
+            panels: [
+              { id: "panel1", top: 0, left: 0, width: 50, height: 50 },
+              { id: "panel2", top: 0, left: 50, width: 50, height: 50 },
+              { id: "panel3", top: 50, left: 0, width: 50, height: 50 },
+              { id: "panel4", top: 50, left: 50, width: 50, height: 50 }
+            ]
+          };
+          
+          currentTemplate = fallbackTemplateData;
+          updateStep(2);
+          
+          // 残りのコードは同じ...
+          mangaContainer.innerHTML = '';
+          
+          fallbackTemplateData.panels.forEach(panel => {
+            const panelElement = document.createElement('div');
+            panelElement.id = panel.id;
+            panelElement.className = 'panel';
+            panelElement.style.top = `${panel.top}%`;
+            panelElement.style.left = `${panel.left}%`;
+            panelElement.style.width = `${panel.width}%`;
+            panelElement.style.height = `${panel.height}%`;
+            panelElement.style.backgroundSize = 'cover';
+            panelElement.style.backgroundPosition = 'center';
+            
+            panelElement.dataset.top = `${panel.top}%`;
+            panelElement.dataset.left = `${panel.left}%`;
+            panelElement.dataset.width = `${panel.width}%`;
+            panelElement.dataset.height = `${panel.height}%`;
+            
+            panelElement.addEventListener('click', function() {
+              selectPanel(this);
+            });
+            
+            mangaContainer.appendChild(panelElement);
+          });
+          
+          currentPanel = document.getElementById('panel1');
+          currentPanel.classList.add('selected');
+          
+          templateSelectionScreen.classList.remove('active');
+          mangaEditorScreen.classList.add('active');
+          
+          templateSelectionScreen.style.display = 'none';
+          mangaEditorScreen.style.display = 'block';
+        }
       }
 
       // パネル選択処理
