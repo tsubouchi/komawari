@@ -1620,15 +1620,6 @@
                   }
                 }
                 
-                // パネル番号
-                const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", panelInfo.left + 1);
-                text.setAttribute("y", panelInfo.top + 4);
-                text.setAttribute("fill", "red");
-                text.setAttribute("font-size", "2.5");
-                text.textContent = panelInfo.id.replace("panel", "");
-                g.appendChild(text);
-                
                 svg.appendChild(g);
               });
             }
