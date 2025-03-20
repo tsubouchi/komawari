@@ -1499,97 +1499,75 @@
           imgTest.src = svgDataUrl;
           document.body.appendChild(imgTest);
           
-          // SVGを画像に変換するための新しい手法を使用
-          const img = new Image();
-          img.onload = function() {
-            console.log('SVG画像の読み込み成功（サイズ：', img.width, 'x', img.height, '）');
+          // すべての画像URLを収集
+          const imageUrls = [];
+          document.querySelectorAll('.panel img').forEach(img => {
+            if (img.src && !imageUrls.includes(img.src)) {
+              imageUrls.push(img.src);
+            }
+          });
+          
+          console.log('収集した画像URL:', imageUrls);
+          
+          // サーバーサイドでの高品質PNG変換処理
+          fetch('/api/convert-svg', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              svgData: svgData,
+              title: templateInfo.title,
+              imageUrls: imageUrls
+            })
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('サーバーからのレスポンスが正常ではありません');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('サーバーからの応答:', data);
             
-            // キャンバスに描画
-            const canvas = document.createElement('canvas');
-            canvas.width = CANVAS_SIZE;
-            canvas.height = CANVAS_SIZE;
-            const ctx = canvas.getContext('2d');
-            
-            // キャンバスを白で塗りつぶし
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 画像描画
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // 描画結果を確認
-            console.log('キャンバス描画完了（サイズ：', canvas.width, 'x', canvas.height, '）');
-            
-            // PNG形式に変換
-            try {
-              // キャンバスをデータURLに変換（PNG形式）
-              const imgData = canvas.toDataURL('image/png');
-              console.log('PNG変換成功:', imgData.substring(0, 50) + '...');
-              
-              // デバッグ用：PNG出力のプレビュー表示
-              const pngTest = document.createElement('img');
-              pngTest.setAttribute('style', 'position:fixed; top:220px; left:10px; width:200px; height:200px; z-index:9999; border:2px solid blue; background:white;');
-              pngTest.onload = function() {
-                console.log('PNG画像プレビューの読み込み成功');
-                setTimeout(() => document.body.removeChild(pngTest), 3000);
-              };
-              pngTest.src = imgData;
-              document.body.appendChild(pngTest);
-              
-              // 保存
-              const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-              const fileName = `${templateInfo.title}-${timestamp}.png`;
-              
+            if (data.success) {
+              // ダウンロード用のリンクを作成して自動クリック
               const link = document.createElement('a');
-              link.href = imgData;
-              link.download = fileName;
+              link.href = data.downloadUrl;
+              link.download = data.fileName;
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
               
-              console.log('SVG→PNG変換成功');
-            } catch (e) {
-              console.error('PNG変換エラー:', e);
-              alert('PNG出力に失敗しました: ' + e.message);
+              console.log('高品質PNG画像のダウンロードが完了しました');
+            } else {
+              throw new Error(data.error || '不明なエラーが発生しました');
             }
+          })
+          .catch(error => {
+            console.error('サーバーサイド変換エラー:', error);
+            alert('画像変換に失敗しました: ' + error.message);
             
-            // ローディングオーバーレイを非表示
-            loadingOverlay.style.display = 'none';
-          };
-          
-          img.onerror = function(e) {
-            console.error('SVG読み込みエラー:', e);
-            alert('SVG変換に失敗しました');
-            loadingOverlay.style.display = 'none';
-          };
-          
-          // Base64よりも信頼性の高いBlobURLを使用
-          const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
-          const blobURL = URL.createObjectURL(svgBlob);
-          console.log('BlobURL生成：', blobURL);
-          img.src = blobURL;
-          
-          // 画像読み込みの強制タイムアウト処理追加
-          setTimeout(() => {
-            if (!img.complete) {
-              console.log('タイムアウト処理: SVG画像読み込みが完了していません。強制的に処理続行します。');
+            // エラー時はクライアントサイドでフォールバック
+            try {
+              // クライアントサイドでの代替変換処理
+              const canvas = document.createElement('canvas');
+              canvas.width = CANVAS_SIZE;
+              canvas.height = CANVAS_SIZE;
+              const ctx = canvas.getContext('2d');
               
-              // 代替方法: Data URLを直接使用
-              try {
-                // キャンバスに描画
-                const canvas = document.createElement('canvas');
-                canvas.width = CANVAS_SIZE;
-                canvas.height = CANVAS_SIZE;
-                const ctx = canvas.getContext('2d');
-                
+              // 画像を描画するための要素
+              const img = new Image();
+              img.onload = function() {
                 // キャンバスを白で塗りつぶし
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // PNG形式に変換
-                const imgData = canvas.toDataURL('image/png');
+                // SVG画像を描画
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // 保存
+                // PNG形式に変換してダウンロード
+                const imgData = canvas.toDataURL('image/png');
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
                 const fileName = `${templateInfo.title}-${timestamp}.png`;
                 
@@ -1600,20 +1578,19 @@
                 link.click();
                 document.body.removeChild(link);
                 
-                // Blobリソースを解放
-                URL.revokeObjectURL(blobURL);
-                
-                // ローディングオーバーレイを非表示
-                loadingOverlay.style.display = 'none';
-                
-                console.log('SVG読み込み失敗時の代替処理が完了しました');
-              } catch (e) {
-                console.error('代替処理中にエラーが発生しました:', e);
-                alert('画像生成に失敗しました: ' + e.message);
-                loadingOverlay.style.display = 'none';
-              }
+                console.log('クライアント側でのフォールバック変換に成功しました');
+              };
+              
+              img.src = svgDataUrl;
+            } catch (fallbackError) {
+              console.error('フォールバック処理も失敗:', fallbackError);
+              alert('画像生成に失敗しました。もう一度お試しください。');
             }
-          }, 5000); // 5秒のタイムアウト
+          })
+          .finally(() => {
+            // 処理が完了したらローディングオーバーレイを非表示
+            loadingOverlay.style.display = 'none';
+          });
           
         } catch (error) {
           console.error('処理中にエラーが発生しました:', error);
