@@ -275,7 +275,7 @@
     .panel[id="panel4"] {
       background-color: #f3e5f5; /* 薄い紫 */
     }
-
+    
     /* 各パネルの位置とサイズ */
     #panel1 {
       top: 0;
@@ -537,7 +537,7 @@
   
   <div class="container">
     <h1>漫画コマ枠エディター</h1>
-
+    
     <!-- 進行状況インジケーター -->
     <div class="progress-bar">
       <div class="progress-step">
@@ -569,35 +569,36 @@
     
     <!-- 漫画エディター画面 -->
     <div id="manga-editor-screen" class="screen">
-      <div class="controls">
+    <div class="controls">
         <button id="back-to-templates-btn" class="back-btn">戻る</button>
         
-        <div class="panel-selector">
-          <label for="panel-select">コマを選択:</label>
-          <select id="panel-select">
+      <div class="panel-selector">
+        <label for="panel-select">コマを選択:</label>
+        <select id="panel-select">
             <option value="panel1">コマ1</option>
             <option value="panel2">コマ2</option>
             <option value="panel3">コマ3</option>
             <option value="panel4">コマ4</option>
-          </select>
-        </div>
-        
-        <div class="image-selector">
-          <label for="image-select">画像を選択:</label>
-          <select id="image-select">
-            <option value="">画像なし</option>
-            <option value="1.png">1.png</option>
-            <option value="2.png">2.png</option>
-            <option value="3.png">3.png</option>
-            <option value="4.png">4.png</option>
-            <option value="5.png">5.png</option>
-          </select>
-          <button id="apply-btn">適用</button>
-          <button id="reset-btn">リセット</button>
-          <button id="export-btn" class="export-btn">PNG出力</button>
-        </div>
+        </select>
       </div>
       
+      <div class="image-selector">
+        <label for="image-select">画像を選択:</label>
+        <select id="image-select">
+          <option value="">画像なし</option>
+          <option value="1.png">1.png</option>
+          <option value="2.png">2.png</option>
+          <option value="3.png">3.png</option>
+          <option value="4.png">4.png</option>
+          <option value="5.png">5.png</option>
+        </select>
+        <button id="apply-btn">適用</button>
+        <button id="reset-btn">リセット</button>
+        <button id="export-btn" class="export-btn">SVG保存</button>
+        <button id="export-svg-btn" style="background-color: #FF9800; display: none;">SVG保存</button>
+      </div>
+    </div>
+    
       <!-- テンプレート情報 -->
       <div class="template-header" id="template-header">
         <h2>テンプレート名</h2>
@@ -606,28 +607,28 @@
       
       <div class="manga-container" id="manga-container">
         <!-- パネルはJavaScriptで動的に挿入されます -->
-      </div>
-      
-      <div class="image-preview">
-        <div class="preview-item">
+    </div>
+    
+    <div class="image-preview">
+      <div class="preview-item">
           <img src="1.png" alt="1.png" class="preview-image" data-image="1.png" crossorigin="anonymous">
-          <div>1.png</div>
-        </div>
-        <div class="preview-item">
+        <div>1.png</div>
+      </div>
+      <div class="preview-item">
           <img src="2.png" alt="2.png" class="preview-image" data-image="2.png" crossorigin="anonymous">
-          <div>2.png</div>
-        </div>
-        <div class="preview-item">
+        <div>2.png</div>
+      </div>
+      <div class="preview-item">
           <img src="3.png" alt="3.png" class="preview-image" data-image="3.png" crossorigin="anonymous">
-          <div>3.png</div>
-        </div>
-        <div class="preview-item">
+        <div>3.png</div>
+      </div>
+      <div class="preview-item">
           <img src="4.png" alt="4.png" class="preview-image" data-image="4.png" crossorigin="anonymous">
-          <div>4.png</div>
-        </div>
-        <div class="preview-item">
+        <div>4.png</div>
+      </div>
+      <div class="preview-item">
           <img src="5.png" alt="5.png" class="preview-image" data-image="5.png" crossorigin="anonymous">
-          <div>5.png</div>
+        <div>5.png</div>
         </div>
       </div>
     </div>
@@ -702,6 +703,7 @@
       const applyBtn = document.getElementById('apply-btn');
       const resetBtn = document.getElementById('reset-btn');
       const exportBtn = document.getElementById('export-btn');
+      const exportSvgBtn = document.getElementById('export-svg-btn');
       const backToTemplatesBtn = document.getElementById('back-to-templates-btn');
       const loadingOverlay = document.getElementById('loading-overlay');
       
@@ -1063,12 +1065,12 @@
           imageSelect.value = '';
         }
       }
-
+      
       // パネル選択時の処理
       panelSelect.addEventListener('change', function() {
         // 現在の選択を解除
         if (currentPanel) {
-          currentPanel.classList.remove('selected');
+        currentPanel.classList.remove('selected');
           // 通常の枠線に戻す
           currentPanel.style.border = '1px solid #000';
         }
@@ -1088,7 +1090,7 @@
           if (match && match[1]) {
             const imagePath = match[1];
             const imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
-            imageSelect.value = imageName;
+          imageSelect.value = imageName;
           } else {
             imageSelect.value = '';
           }
@@ -1203,7 +1205,7 @@
           updateStep(3);
         }
       }
-
+      
       // 画像適用ボタンの処理
       applyBtn.addEventListener('click', function() {
         const selectedImage = imageSelect.value;
@@ -1270,16 +1272,8 @@
         });
       });
       
-      // PNG出力ボタンの処理
+      // SVG保存ボタンの処理
       exportBtn.addEventListener('click', function() {
-        // ローディングオーバーレイを表示
-        const loadingText = loadingOverlay.querySelector('.loading-text');
-        const processStatus = loadingOverlay.querySelector('.process-status');
-        
-        loadingText.textContent = '画像を生成中...';
-        processStatus.textContent = 'SVGデータを準備中...';
-        loadingOverlay.style.display = 'flex';
-        
         try {
           // 現在のテンプレート情報を取得
           const templateInfo = currentTemplate || {
@@ -1287,7 +1281,54 @@
             panels: []
           };
           
-          // SVGでコマ割りを完全に再現するための新しいアプローチ
+          // 画像をBase64に変換する関数
+          const imageToBase64 = async (url) => {
+            return new Promise((resolve, reject) => {
+              try {
+                // 既にデータURLならそのまま返す
+                if (url.startsWith('data:')) {
+                  resolve(url);
+                  return;
+                }
+                
+                // 新しい画像要素を作成して読み込み
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                  try {
+                    // 一時的なキャンバスを作成して画像を描画
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Base64データを取得して返す
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve(dataURL);
+                  } catch (e) {
+                    console.error('画像のBase64変換に失敗:', e);
+                    // 失敗した場合は元のURLを返す
+                    resolve(url);
+                  }
+                };
+                
+                img.onerror = () => {
+                  console.warn('画像の読み込みに失敗:', url);
+                  // 失敗した場合は元のURLを返す
+                  resolve(url);
+                };
+                
+                // HTTPリクエストの際にキャッシュを無効化
+                img.src = url + (url.includes('?') ? '&' : '?') + 'nocache=' + Date.now();
+              } catch (e) {
+                console.error('Base64変換エラー:', e);
+                resolve(url);
+              }
+            });
+          };
+          
+          // SVGでコマ割りを完全に再現
           const svgNS = "http://www.w3.org/2000/svg";
           const xlinkNS = "http://www.w3.org/1999/xlink";
           
@@ -1312,354 +1353,230 @@
           background.setAttribute("fill", "white");
           svg.appendChild(background);
           
-          // 現在のパネル要素を取得
-          const panels = document.querySelectorAll('.panel');
+          // ローディングオーバーレイを表示
+          const loadingOverlay = document.getElementById('loading-overlay');
+          loadingOverlay.style.display = 'flex';
+          const loadingText = loadingOverlay.querySelector('.loading-text');
+          const processStatus = loadingOverlay.querySelector('.process-status');
           
-          // 各パネルをSVGに追加
-          panels.forEach(panel => {
-            // パネルのスタイル情報を取得
-            const style = window.getComputedStyle(panel);
-            const top = parseFloat(style.top) / parseFloat(style.width) * 100;
-            const left = parseFloat(style.left) / parseFloat(style.width) * 100;
-            const width = parseFloat(style.width) / parseFloat(style.width) * 100;
-            const height = parseFloat(style.height) / parseFloat(style.width) * 100;
-            const clipPath = panel.style.clipPath;
+          loadingText.textContent = 'SVG生成中...';
+          processStatus.textContent = '画像をBase64に変換しています...';
+          
+          // 非同期で画像変換とSVG生成を行う
+          (async () => {
+            const imgProcessPromises = [];
+            const allPanels = document.querySelectorAll('.panel');
+            const imageUrlMap = new Map(); // 画像URLとBase64のマッピング
             
-            // コンソールでデバッグ出力
-            console.log(`パネル ${panel.id} のスタイル情報:`, 
-              { 
-                raw: { top: style.top, left: style.left, width: style.width, height: style.height },
-                parsed: { top, left, width, height }
-              }
-            );
-            
-            // NaNチェック - 計算が失敗した場合はデータ属性から取得
-            let validTop = isNaN(top) ? parseFloat(panel.dataset.top) : top;
-            let validLeft = isNaN(left) ? parseFloat(panel.dataset.left) : left;
-            let validWidth = isNaN(width) ? parseFloat(panel.dataset.width) : width;
-            let validHeight = isNaN(height) ? parseFloat(panel.dataset.height) : height;
-            
-            // %記号が含まれている場合は削除
-            validTop = validTop.toString().replace('%', '');
-            validLeft = validLeft.toString().replace('%', '');
-            validWidth = validWidth.toString().replace('%', '');
-            validHeight = validHeight.toString().replace('%', '');
-            
-            // 数値に変換
-            validTop = parseFloat(validTop);
-            validLeft = parseFloat(validLeft);
-            validWidth = parseFloat(validWidth);
-            validHeight = parseFloat(validHeight);
-            
-            // さらにNaNチェック - それでも失敗した場合はデフォルト値を使用
-            if (isNaN(validTop)) validTop = 0;
-            if (isNaN(validLeft)) validLeft = 0;
-            if (isNaN(validWidth)) validWidth = 25;
-            if (isNaN(validHeight)) validHeight = 25;
-            
-            console.log(`パネル ${panel.id} の有効な座標:`, { validTop, validLeft, validWidth, validHeight });
-            
-            // パネル用のグループ要素
-            const g = document.createElementNS(svgNS, "g");
-            
-            // 台形の場合の特殊処理
-            if (clipPath && clipPath !== 'none') {
-              const clipPathValue = clipPath.replace("polygon(", "").replace(")", "");
-              const points = [];
-              
-              // CSSのpolygon形式をSVGのpoints形式に変換
-              clipPathValue.split(",").forEach(point => {
-                const trimmedPoint = point.trim();
-                const parts = trimmedPoint.split(" ");
-                const x = parseFloat(parts[0]) * validWidth / 100 + validLeft;
-                const y = parseFloat(parts[1]) * validHeight / 100 + validTop;
-                points.push(`${x},${y}`);
-              });
-              
-              // 台形用のポリゴン要素を作成
-              const polygon = document.createElementNS(svgNS, "polygon");
-              polygon.setAttribute("points", points.join(" "));
-              polygon.setAttribute("fill", "white");
-              polygon.setAttribute("stroke", "black");
-              polygon.setAttribute("stroke-width", "0.2");
-              g.appendChild(polygon);
-              
-              // SVG用クリッピングパスを定義
-              const clipPathId = `clip_${panel.id}`;
-              const clipPathElement = document.createElementNS(svgNS, "clipPath");
-              clipPathElement.setAttribute("id", clipPathId);
-              
-              const clipPathPolygon = document.createElementNS(svgNS, "polygon");
-              clipPathPolygon.setAttribute("points", points.join(" "));
-              clipPathElement.appendChild(clipPathPolygon);
-              svg.appendChild(clipPathElement);
-              
-              // 画像を取得
+            // 先に全ての画像をBase64に変換
+            for (const panel of allPanels) {
               const img = panel.querySelector('img');
-              if (img) {
-                // 画像URLの解決（相対パスを絶対URLに変換）
-                let imgSrc = img.src;
-                // すでに絶対URLかどうかをチェック
-                if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-                  // 相対パスを絶対URLに変換
-                  const a = document.createElement('a');
-                  a.href = imgSrc;
-                  imgSrc = a.href;
+              if (img && img.src) {
+                // 同じURLは処理しない
+                if (!imageUrlMap.has(img.src)) {
+                  imgProcessPromises.push(
+                    imageToBase64(img.src).then(base64 => {
+                      imageUrlMap.set(img.src, base64);
+                      console.log(`画像変換完了: ${img.src.substring(0, 50)}...`);
+                    })
+                  );
                 }
-                console.log(`パネル ${panel.id} の画像URL:`, imgSrc);
-                
-                // 画像を追加
-                const svgImage = document.createElementNS(svgNS, "image");
-                svgImage.setAttributeNS(xlinkNS, "href", imgSrc);
-                svgImage.setAttribute("x", validLeft);
-                svgImage.setAttribute("y", validTop);
-                svgImage.setAttribute("width", validWidth);
-                svgImage.setAttribute("height", validHeight);
-                svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
-                svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
-                svgImage.setAttribute("crossorigin", "anonymous");
-                g.appendChild(svgImage);
-                
-                // パネル番号を表示（左上に小さく）
-                const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", validLeft + 2);  // 左上に配置
-                text.setAttribute("y", validTop + 4);   // 少し下に調整
-                text.setAttribute("fill", "red");
-                text.setAttribute("font-size", "2");
-                text.setAttribute("text-anchor", "start");
-                text.textContent = panel.id.replace("panel", "");
-                g.appendChild(text);
               }
-            } else {
-              // 通常の矩形パネル
-              const rect = document.createElementNS(svgNS, "rect");
-              rect.setAttribute("x", validLeft);
-              rect.setAttribute("y", validTop);
-              rect.setAttribute("width", validWidth);
-              rect.setAttribute("height", validHeight);
-              rect.setAttribute("fill", "white");
-              rect.setAttribute("stroke", "black");
-              rect.setAttribute("stroke-width", "0.2");
-              g.appendChild(rect);
-              
-              // 画像を取得
-              const img = panel.querySelector('img');
-              if (img) {
-                // 矩形用のクリッピングパスポイントを生成
-                const rectPoints = [
-                  `${validLeft},${validTop}`,                           // 左上
-                  `${validLeft + validWidth},${validTop}`,              // 右上
-                  `${validLeft + validWidth},${validTop + validHeight}`, // 右下
-                  `${validLeft},${validTop + validHeight}`              // 左下
-                ];
+            }
+            
+            // 全ての画像変換を待つ
+            await Promise.all(imgProcessPromises);
+            processStatus.textContent = 'SVGパネル生成中...';
+            
+            // パネル情報を使ってSVG作成
+            if (currentTemplate && currentTemplate.panels) {
+              currentTemplate.panels.forEach(panelInfo => {
+                const panel = document.getElementById(panelInfo.id);
+                if (!panel) return;
                 
-                // SVG用クリッピングパスを定義
-                const clipPathId = `clip_${panel.id}`;
-                const clipPathElement = document.createElementNS(svgNS, "clipPath");
-                clipPathElement.setAttribute("id", clipPathId);
+                // パネル用のグループ要素
+                const g = document.createElementNS(svgNS, "g");
                 
-                const clipPathPolygon = document.createElementNS(svgNS, "polygon");
-                clipPathPolygon.setAttribute("points", rectPoints.join(" "));
-                clipPathElement.appendChild(clipPathPolygon);
-                svg.appendChild(clipPathElement);
-                
-                // 画像URLの解決と変換（できるだけデータURLに変換）
-                let imgSrc = img.src;
-                
-                // 既にデータURLならそのまま使う
-                if (imgSrc.startsWith('data:')) {
-                  console.log(`パネル ${panel.id} は既にデータURL形式です`);
-                } 
-                // 絶対URLの場合
-                else if (imgSrc.startsWith('http')) {
-                  console.log(`パネル ${panel.id} は絶対URL形式です: ${imgSrc}`);
+                // 台形の場合の特殊処理
+                if (panelInfo.clipPath) {
+                  // 多角形用のポリゴン要素を作成
+                  const polygon = document.createElementNS(svgNS, "polygon");
                   
-                  // Canvas APIを使って画像をデータURLに変換
-                  try {
-                    const tempCanvas = document.createElement('canvas');
-                    const tempCtx = tempCanvas.getContext('2d');
-                    
-                    // 画像がロード済みの場合
-                    if (img.complete && img.naturalWidth > 0) {
-                      tempCanvas.width = img.naturalWidth;
-                      tempCanvas.height = img.naturalHeight;
-                      tempCtx.drawImage(img, 0, 0);
-                      imgSrc = tempCanvas.toDataURL('image/png');
-                      console.log(`パネル ${panel.id} の画像をデータURLに変換しました`);
-                    }
-                  } catch (e) {
-                    console.error(`パネル ${panel.id} の画像変換に失敗しました:`, e);
+                  // clipPathからポイント情報を抽出
+                  const clipPathValue = panelInfo.clipPath.replace("polygon(", "").replace(")", "");
+                  const points = [];
+                  
+                  clipPathValue.split(",").forEach(point => {
+                    const trimmedPoint = point.trim();
+                    const parts = trimmedPoint.split(" ");
+                    const x = parseFloat(parts[0]) * panelInfo.width / 100 + panelInfo.left;
+                    const y = parseFloat(parts[1]) * panelInfo.height / 100 + panelInfo.top;
+                    points.push(`${x},${y}`);
+                  });
+                  
+                  polygon.setAttribute("points", points.join(" "));
+                  polygon.setAttribute("fill", "white");
+                  polygon.setAttribute("stroke", "black");
+                  polygon.setAttribute("stroke-width", "0.2");
+                  g.appendChild(polygon);
+                  
+                  // クリッピングパス定義
+                  const clipPathId = `clip_${panelInfo.id}`;
+                  const clipPathElement = document.createElementNS(svgNS, "clipPath");
+                  clipPathElement.setAttribute("id", clipPathId);
+                  
+                  const clipPathPolygon = document.createElementNS(svgNS, "polygon");
+                  clipPathPolygon.setAttribute("points", points.join(" "));
+                  clipPathElement.appendChild(clipPathPolygon);
+                  svg.appendChild(clipPathElement);
+                  
+                  // 画像要素
+                  const img = panel.querySelector('img');
+                  if (img) {
+                    const svgImage = document.createElementNS(svgNS, "image");
+                    // Base64に変換済みの画像URLを使用
+                    const imageDataUrl = imageUrlMap.get(img.src) || img.src;
+                    svgImage.setAttributeNS(xlinkNS, "href", imageDataUrl);
+                    svgImage.setAttribute("x", panelInfo.left);
+                    svgImage.setAttribute("y", panelInfo.top);
+                    svgImage.setAttribute("width", panelInfo.width);
+                    svgImage.setAttribute("height", panelInfo.height);
+                    svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                    svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
+                    g.appendChild(svgImage);
                   }
-                } 
-                // 相対パスの場合は絶対URLに変換
-                else {
-                  const a = document.createElement('a');
-                  a.href = imgSrc;
-                  imgSrc = a.href;
-                  console.log(`パネル ${panel.id} の相対パスを絶対URLに変換: ${imgSrc}`);
+                } else {
+                  // 通常の矩形パネル
+                  const rect = document.createElementNS(svgNS, "rect");
+                  rect.setAttribute("x", panelInfo.left);
+                  rect.setAttribute("y", panelInfo.top);
+                  rect.setAttribute("width", panelInfo.width);
+                  rect.setAttribute("height", panelInfo.height);
+                  rect.setAttribute("fill", "white");
+                  rect.setAttribute("stroke", "black");
+                  rect.setAttribute("stroke-width", "0.2");
+                  g.appendChild(rect);
+                  
+                  // 画像クリッピングパス
+                  const clipPathId = `clip_${panelInfo.id}`;
+                  const clipPathElement = document.createElementNS(svgNS, "clipPath");
+                  clipPathElement.setAttribute("id", clipPathId);
+                  
+                  const clipPathRect = document.createElementNS(svgNS, "rect");
+                  clipPathRect.setAttribute("x", panelInfo.left);
+                  clipPathRect.setAttribute("y", panelInfo.top);
+                  clipPathRect.setAttribute("width", panelInfo.width);
+                  clipPathRect.setAttribute("height", panelInfo.height);
+                  clipPathElement.appendChild(clipPathRect);
+                  svg.appendChild(clipPathElement);
+                  
+                  // 画像要素
+                  const img = panel.querySelector('img');
+                  if (img) {
+                    const svgImage = document.createElementNS(svgNS, "image");
+                    // Base64に変換済みの画像URLを使用
+                    const imageDataUrl = imageUrlMap.get(img.src) || img.src;
+                    svgImage.setAttributeNS(xlinkNS, "href", imageDataUrl);
+                    svgImage.setAttribute("x", panelInfo.left);
+                    svgImage.setAttribute("y", panelInfo.top);
+                    svgImage.setAttribute("width", panelInfo.width);
+                    svgImage.setAttribute("height", panelInfo.height);
+                    svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                    svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
+                    g.appendChild(svgImage);
+                  }
                 }
                 
-                console.log(`パネル ${panel.id} の最終画像URL:`, imgSrc);
-                
-                // 画像を追加
-                const svgImage = document.createElementNS(svgNS, "image");
-                svgImage.setAttributeNS(xlinkNS, "href", imgSrc);
-                svgImage.setAttribute("x", validLeft);
-                svgImage.setAttribute("y", validTop);
-                svgImage.setAttribute("width", validWidth);
-                svgImage.setAttribute("height", validHeight);
-                svgImage.setAttribute("preserveAspectRatio", "xMidYMid slice");
-                svgImage.setAttribute("clip-path", `url(#${clipPathId})`);
-                svgImage.setAttribute("crossorigin", "anonymous");
-                g.appendChild(svgImage);
-                
-                // パネル番号を表示（左上に小さく）
+                // パネル番号
                 const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", validLeft + 2);  // 左上に配置
-                text.setAttribute("y", validTop + 4);   // 少し下に調整
+                text.setAttribute("x", panelInfo.left + 1);
+                text.setAttribute("y", panelInfo.top + 4);
                 text.setAttribute("fill", "red");
-                text.setAttribute("font-size", "2");
-                text.setAttribute("text-anchor", "start");
-                text.textContent = panel.id.replace("panel", "");
+                text.setAttribute("font-size", "2.5");
+                text.textContent = panelInfo.id.replace("panel", "");
                 g.appendChild(text);
-              }
-            }
-            
-            svg.appendChild(g);
-          });
-          
-          // デバッグ用：SVGの内容を確認
-          console.log('SVG要素:', svg);
-          
-          // SVGを文字列に変換
-          const svgData = new XMLSerializer().serializeToString(svg);
-          console.log('SVG文字列データ:', svgData.substring(0, 150) + '...');
-          
-          // SVGデータを直接img要素のsrcに設定して表示テスト
-          const imgTest = document.createElement('img');
-          imgTest.setAttribute('style', 'position:fixed; top:10px; left:10px; width:200px; height:200px; z-index:9999; border:2px solid red; background:white;');
-          imgTest.onload = function() {
-            console.log('SVGテスト画像の読み込み成功');
-            setTimeout(() => document.body.removeChild(imgTest), 3000);
-          };
-          imgTest.onerror = function(e) {
-            console.error('SVGテスト画像の読み込み失敗:', e);
-          };
-          
-          // ダイレクトなSVG Data URLを使用
-          const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
-          imgTest.src = svgDataUrl;
-          document.body.appendChild(imgTest);
-          
-          // すべての画像URLを収集
-          const imageUrls = [];
-          document.querySelectorAll('.panel img').forEach(img => {
-            if (img.src && !imageUrls.includes(img.src)) {
-              imageUrls.push(img.src);
-            }
-          });
-          
-          console.log('収集した画像URL:', imageUrls);
-          
-          // サーバーサイドでの高品質PNG変換処理
-          fetch('/api/convert-svg', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              svgData: svgData,
-              title: templateInfo.title,
-              imageUrls: imageUrls
-            })
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('サーバーからのレスポンスが正常ではありません');
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log('サーバーからの応答:', data);
-            
-            if (data.success) {
-              // 処理ステータスの表示更新
-              loadingText.textContent = 
-                data.processStatus ? `${data.processStatus.message} - 画像を保存中...` : '画像を生成しました';
-              
-              // プレビュー画像を表示（オプション）
-              if (data.previewUrl) {
-                console.log('プレビュー表示:', data.previewUrl);
                 
-                // プレビュー画像要素を作成
-                const previewElem = document.createElement('div');
-                previewElem.style.position = 'fixed';
-                previewElem.style.bottom = '20px';
-                previewElem.style.left = '20px';
-                previewElem.style.backgroundColor = 'white';
-                previewElem.style.padding = '10px';
-                previewElem.style.borderRadius = '5px';
-                previewElem.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-                previewElem.style.zIndex = '10000';
-                previewElem.innerHTML = `
-                  <div style="margin-bottom:5px;">PNG出力完了:</div>
-                  <img src="${data.previewUrl}" style="max-width:300px; max-height:300px; border:1px solid #ccc;" />
-                  <div style="margin-top:10px; text-align:center;">
-                    <button id="preview-close" style="padding:5px 10px; background:#f44336; color:white; border:none; border-radius:3px; cursor:pointer;">閉じる</button>
-                  </div>
-                `;
-                document.body.appendChild(previewElem);
-                
-                // 閉じるボタンのイベント設定
-                document.getElementById('preview-close').addEventListener('click', () => {
-                  document.body.removeChild(previewElem);
-                });
-                
-                // 10秒後に自動的に閉じる
-                setTimeout(() => {
-                  if (document.body.contains(previewElem)) {
-                    document.body.removeChild(previewElem);
-                  }
-                }, 10000);
-              }
-              
-              // 画像ダウンロード
-              const link = document.createElement('a');
-              link.href = data.downloadUrl;
-              link.download = data.fileName;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              
-              console.log('高品質PNG画像のダウンロードが完了しました');
-            } else {
-              throw new Error(data.error || '不明なエラーが発生しました');
+                svg.appendChild(g);
+              });
             }
-          })
-          .catch(error => {
-            console.error('サーバーサイド変換エラー:', error);
             
-            // エラー表示を詳細に
-            loadingText.textContent = '画像変換エラー';
-            processStatus.textContent = error.message;
-            processStatus.style.color = '#ffcccc';
+            processStatus.textContent = 'SVG生成完了';
             
-            // 3秒後にアラート表示
-            setTimeout(() => {
-              alert('画像変換に失敗しました: ' + error.message);
-            }, 3000);
-          })
-          .finally(() => {
-            // 処理が完了したらローディングオーバーレイを非表示
+            // SVGを文字列に変換
+            const svgData = new XMLSerializer().serializeToString(svg);
+            
+            // SVGプレビューを左上に表示
+            const imgTest = document.createElement('div');
+            imgTest.setAttribute('style', 'position:fixed; top:10px; left:10px; width:auto; padding:10px; z-index:9999; border:2px solid red; background:white; border-radius:5px; box-shadow:0 2px 10px rgba(0,0,0,0.2);');
+            
+            // エンコード方法を変更（XMLエンティティも適切に処理）
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `${templateInfo.title}-${timestamp}.svg`;
+            
+            imgTest.innerHTML = `
+              <p style="margin:0 0 10px 0; font-size:14px;">SVGプレビュー (正しいSVG)</p>
+              <img src="${svgUrl}" style="width:500px; height:500px; display:block; margin-bottom:10px; border:1px solid #ccc;" />
+              <div style="display:flex; justify-content:space-between;">
+                <button id="download-svg-preview" style="padding:8px 15px; background:#4CAF50; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:bold;">このSVGをダウンロード</button>
+                <button id="close-svg-preview" style="padding:8px 15px; background:#f44336; color:white; border:none; border-radius:3px; cursor:pointer;">閉じる</button>
+              </div>
+            `;
+            
+            document.body.appendChild(imgTest);
+            
+            // ローディングオーバーレイを非表示
             loadingOverlay.style.display = 'none';
-          });
+            
+            // ダウンロードボタンのクリックイベント
+            document.getElementById('download-svg-preview').addEventListener('click', function() {
+              try {
+                // Blobを使用してダウンロード
+                const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // URLを解放
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                console.log('SVGファイルが保存されました');
+              } catch (error) {
+                console.error('SVGダウンロード中にエラーが発生:', error);
+                alert('SVGのダウンロードに失敗しました: ' + error.message);
+              }
+            });
+            
+            // 閉じるボタンのクリックイベント
+            document.getElementById('close-svg-preview').addEventListener('click', function() {
+              document.body.removeChild(imgTest);
+              // オブジェクトURLの解放
+              URL.revokeObjectURL(svgUrl);
+            });
+          })();
           
         } catch (error) {
-          console.error('処理中にエラーが発生しました:', error);
-          alert('処理中にエラーが発生しました: ' + error.message);
-          loadingOverlay.style.display = 'none';
+          console.error('SVG生成中にエラーが発生しました:', error);
+          alert('SVG生成中にエラーが発生しました: ' + error.message);
+          
+          // エラー時もローディングを非表示
+          const loadingOverlay = document.getElementById('loading-overlay');
+          if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+          }
         }
       });
+      
+      // 追加のSVG出力ボタンを無効化
+      if (document.getElementById('export-svg-btn')) {
+        document.getElementById('export-svg-btn').style.display = 'none';
+      }
     });
   </script>
 </body>
