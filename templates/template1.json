@@ -1,6 +1,6 @@
 {
-  "title": "標準4コマ",
-  "description": "標準的な上下2段の4コマレイアウト",
+  "title": "Standard 4-Panel",
+  "description": "Classic layout with 2 rows of 2 panels",
   "panels": [
     {
       "id": "panel1",

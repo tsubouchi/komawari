@@ -2,92 +2,92 @@
   "templates": [
     {
       "id": "template1",
-      "title": "標準4コマ",
-      "description": "標準的な上下2段の4コマレイアウト",
+      "title": "Standard 4-Panel",
+      "description": "Classic layout with 2 rows of 2 panels",
       "thumbnail": "thumbnails/1.png"
     },
     {
       "id": "template2",
-      "title": "縦4コマ",
-      "description": "縦に並んだ伝統的な4コマレイアウト",
+      "title": "Vertical 4-Panel",
+      "description": "Traditional vertically aligned 4-panel layout",
       "thumbnail": "thumbnails/2.png"
     },
     {
       "id": "template3",
-      "title": "大小混合",
-      "description": "左側に大きなコマ、右側に3つの小さなコマ",
+      "title": "Mixed Size",
+      "description": "Large panel on the left, three smaller panels on the right",
       "thumbnail": "thumbnails/3.png"
     },
     {
       "id": "template4",
-      "title": "ダイナミックレイアウト",
-      "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
+      "title": "Dynamic Layout",
+      "description": "Large panel in top-left combined with three smaller panels",
       "thumbnail": "thumbnails/4.png"
     },
     {
       "id": "template5",
-      "title": "横4コマ",
-      "description": "横に並んだ4コマレイアウト",
+      "title": "Horizontal 4-Panel",
+      "description": "Four panels aligned horizontally",
       "thumbnail": "thumbnails/5.png"
     },
     {
       "id": "template6",
-      "title": "階段レイアウト",
-      "description": "階段状に配置された4コマレイアウト",
+      "title": "Staircase Layout",
+      "description": "Four panels arranged in a staircase pattern",
       "thumbnail": "thumbnails/6.png"
     },
     {
       "id": "template7",
-      "title": "T字型レイアウト",
-      "description": "T字型に配置された4コマレイアウト",
+      "title": "T-Shaped Layout",
+      "description": "Panels arranged in a T-shaped pattern",
       "thumbnail": "thumbnails/7.png"
     },
     {
       "id": "template8",
-      "title": "Z字型レイアウト",
-      "description": "Z字型に配置された4コマレイアウト",
+      "title": "Z-Pattern Layout",
+      "description": "Panels arranged in a Z-shaped reading pattern",
       "thumbnail": "thumbnails/8.png"
     },
     {
       "id": "template9",
-      "title": "中央フォーカス",
-      "description": "中央に大きなコマを配置した4コマレイアウト",
+      "title": "Center Focus",
+      "description": "Layout with a large center panel surrounded by smaller panels",
       "thumbnail": "thumbnails/9.png"
     },
     {
       "id": "template10",
-      "title": "十字型レイアウト",
-      "description": "十字型に配置された4コマレイアウト",
+      "title": "Cross Layout",
+      "description": "Panels arranged in a cross pattern",
       "thumbnail": "thumbnails/10.png"
     },
     {
       "id": "template11",
-      "title": "斜め分割",
-      "description": "右上から左下への斜め線で分割された4コマレイアウト",
+      "title": "Diagonal Split",
+      "description": "Four-panel layout split by a diagonal line from top-right to bottom-left",
       "thumbnail": "thumbnails/11.png"
     },
     {
       "id": "template12",
-      "title": "台形メイン",
-      "description": "大きな台形コマを中心にしたレイアウト",
+      "title": "Trapezoid Focus",
+      "description": "Layout centered around a large trapezoid panel",
       "thumbnail": "thumbnails/12.png"
     },
     {
       "id": "template13",
-      "title": "ジグザグレイアウト",
-      "description": "ジグザグに配置された4コマレイアウト",
+      "title": "Zigzag Layout",
+      "description": "Four panels arranged in a zigzag pattern",
       "thumbnail": "thumbnails/13.png"
     },
     {
       "id": "template14",
-      "title": "放射状レイアウト",
-      "description": "中心から放射状に広がる4コマレイアウト",
+      "title": "Radial Layout",
+      "description": "Four panels radiating from the center",
       "thumbnail": "thumbnails/14.png"
     },
     {
       "id": "template15",
-      "title": "斜め波状レイアウト",
-      "description": "斜めに波打つ線で区切られた4コマレイアウト",
+      "title": "Diagonal Wave",
+      "description": "Four panels separated by diagonal wavy lines",
       "thumbnail": "thumbnails/15.png"
     }
   ]

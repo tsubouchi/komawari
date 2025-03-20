@@ -1,6 +1,6 @@
 {
-  "title": "横4コマ",
-  "description": "横に並んだ4コマレイアウト",
+  "title": "Horizontal 4-Panel",
+  "description": "Four panels aligned horizontally",
   "panels": [
     {
       "id": "panel1",

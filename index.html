@@ -1,17 +1,110 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>漫画コマ枠エディター</title>
+  <title>Manga Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
+    :root {
+      /* Light mode (default) */
+      --background-color: #ffffff;
+      --text-color: #000000;
+      --card-background: #ffffff;
+      --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      --panel-border: 1px solid #000000;
+      --panel-background: #f5f5f5;
+      --header-background: #ffffff;
+      --control-background: #ffffff;
+      --primary-button: #4CAF50;
+      --primary-button-hover: #45a049;
+      --secondary-button: #2196F3;
+      --secondary-button-hover: #0b7dda;
+      --danger-button: #f44336;
+      --danger-button-hover: #d32f2f;
+      --spinner-color: #3498db;
+      --loading-overlay: rgba(0, 0, 0, 0.7);
+      --step-inactive: #ddd;
+      --step-active: #4CAF50;
+    }
+
+    [data-theme="dark"] {
+      --background-color: #121212;
+      --text-color: #ffffff;
+      --card-background: #1e1e1e;
+      --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      --panel-border: 1px solid #ffffff;
+      --panel-background: #2d2d2d;
+      --header-background: #1e1e1e;
+      --control-background: #1e1e1e;
+      --primary-button: #4CAF50;
+      --primary-button-hover: #45a049;
+      --secondary-button: #2196F3;
+      --secondary-button-hover: #0b7dda;
+      --danger-button: #f44336;
+      --danger-button-hover: #d32f2f;
+      --spinner-color: #3498db;
+      --loading-overlay: rgba(0, 0, 0, 0.8);
+      --step-inactive: #444;
+      --step-active: #4CAF50;
+    }
+    
     body {
-      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      font-family: 'Arial', 'Helvetica', sans-serif;
       margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: var(--header-background);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .navbar .logo {
+      font-size: 24px;
+      font-weight: bold;
+      text-decoration: none;
+      color: var(--text-color);
+    }
+    
+    .navbar .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .navbar .nav-links a {
+      text-decoration: none;
+      color: var(--text-color);
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .navbar .nav-links a:hover {
+      background-color: rgba(128, 128, 128, 0.1);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color);
+      font-size: 20px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .container {
@@ -19,17 +112,21 @@
       flex-direction: column;
       max-width: 1200px;
       margin: 0 auto;
+      padding: 20px;
     }
     
     h1 {
       text-align: center;
-      color: #333;
+      color: var(--text-color);
+      margin-top: 30px;
+      margin-bottom: 20px;
+      font-size: 32px;
     }
     
     .welcome-message {
       text-align: center;
       margin-bottom: 30px;
-      color: #555;
+      color: var(--text-color);
     }
 
     .template-grid {
@@ -40,9 +137,9 @@
     }
     
     .template-card {
-      background-color: white;
+      background-color: var(--card-background);
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--card-shadow);
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
@@ -56,7 +153,7 @@
     .template-thumbnail {
       width: 100%;
       height: 200px;
-      background-color: #eee;
+      background-color: var(--panel-background);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -83,12 +180,13 @@
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 5px;
-      color: #333;
+      color: var(--text-color);
     }
     
     .template-description {
       font-size: 14px;
-      color: #666;
+      color: var(--text-color);
+      opacity: 0.8;
     }
 
     .thumbnail-placeholder {
@@ -101,8 +199,8 @@
     }
 
     .thumbnail-panel {
-      border: 2px solid #000;
-      background-color: #f0f0f0;
+      border: var(--panel-border);
+      background-color: var(--panel-background);
       box-sizing: border-box;
       min-height: 10px;
       min-width: 10px;
@@ -112,10 +210,10 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 20px;
-      background: #fff;
+      background: var(--control-background);
       padding: 15px;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--card-shadow);
     }
     
     .panel-selector {
@@ -141,41 +239,43 @@
     select {
       padding: 8px 12px;
       border-radius: 4px;
-      border: 1px solid #ddd;
-      background-color: white;
+      border: 1px solid var(--text-color);
+      background-color: var(--background-color);
+      color: var(--text-color);
       font-size: 16px;
     }
     
     button {
       padding: 8px 15px;
-      background-color: #4CAF50;
+      background-color: var(--primary-button);
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 16px;
       margin-left: 10px;
+      transition: background-color 0.3s ease;
     }
     
     button:hover {
-      background-color: #45a049;
+      background-color: var(--primary-button-hover);
     }
     
     .export-btn {
-      background-color: #2196F3;
+      background-color: var(--secondary-button);
     }
     
     .export-btn:hover {
-      background-color: #0b7dda;
+      background-color: var(--secondary-button-hover);
     }
 
     .back-btn {
-      background-color: #f44336;
+      background-color: var(--danger-button);
       margin-right: auto;
     }
     
     .back-btn:hover {
-      background-color: #d32f2f;
+      background-color: var(--danger-button-hover);
     }
     
     #loading-overlay {
@@ -185,7 +285,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: var(--loading-overlay);
       z-index: 1000;
       justify-content: center;
       align-items: center;
@@ -194,7 +294,7 @@
     
     .spinner {
       border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
+      border-top: 5px solid var(--spinner-color);
       border-radius: 50%;
       width: 50px;
       height: 50px;
@@ -366,7 +466,7 @@
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background-color: #ddd;
+      background-color: var(--step-inactive);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -376,31 +476,31 @@
     }
 
     .step-circle.active {
-      background-color: #4CAF50;
+      background-color: var(--step-active);
       color: white;
     }
 
     .step-circle.completed {
-      background-color: #4CAF50;
+      background-color: var(--step-active);
       color: white;
     }
 
     .step-line {
       width: 100px;
       height: 3px;
-      background-color: #ddd;
+      background-color: var(--step-inactive);
       position: relative;
       top: -18px;
       z-index: 1;
     }
 
     .step-line.completed {
-      background-color: #4CAF50;
+      background-color: var(--step-active);
     }
 
     .step-text {
       font-size: 14px;
-      color: #666;
+      color: var(--text-color);
     }
 
     .screen {
@@ -508,106 +608,113 @@
 
     /* テンプレート情報表示エリア */
     .template-header {
-      background-color: #fff;
+      background-color: var(--header-background);
       padding: 15px;
       margin-bottom: 15px;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--card-shadow);
     }
 
     .template-header h2 {
       margin: 0 0 5px 0;
-      color: #333;
+      color: var(--text-color);
       font-size: 20px;
     }
 
     .template-header p {
       margin: 0;
-      color: #666;
+      color: var(--text-color);
       font-size: 14px;
     }
   </style>
 </head>
 <body>
+  <nav class="navbar">
+    <a href="#" class="logo">Manga Generator</a>
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+      <span id="theme-icon">🌙</span>
+    </button>
+  </nav>
+
   <div id="loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">画像を生成中...</div>
+    <div class="loading-text">Generating image...</div>
     <div class="process-status" style="color:white; margin-top:10px; font-size:14px;"></div>
   </div>
   
   <div class="container">
-    <h1>漫画コマ枠エディター</h1>
+    <h1>Manga Generator</h1>
     
-    <!-- 進行状況インジケーター -->
+    <!-- Progress Indicator -->
     <div class="progress-bar">
       <div class="progress-step">
         <div class="step-circle active" id="step1">1</div>
-        <div class="step-text">テンプレート選択</div>
+        <div class="step-text">Select Template</div>
       </div>
       <div class="step-line" id="line1"></div>
       <div class="progress-step">
         <div class="step-circle" id="step2">2</div>
-        <div class="step-text">画像配置</div>
+        <div class="step-text">Place Images</div>
       </div>
       <div class="step-line" id="line2"></div>
       <div class="progress-step">
         <div class="step-circle" id="step3">3</div>
-        <div class="step-text">完成・出力</div>
+        <div class="step-text">Complete & Export</div>
       </div>
     </div>
     
-    <!-- テンプレート選択画面 -->
+    <!-- Template Selection Screen -->
     <div id="template-selection-screen" class="screen active">
       <div class="welcome-message">
-        <p>以下から漫画のコマ割りテンプレートを選んでください。</p>
+        <p>Please select a manga panel layout template below.</p>
       </div>
       
       <div class="template-grid" id="template-grid">
-        <!-- テンプレートはJavaScriptで動的に挿入されます -->
+        <!-- Templates will be dynamically inserted by JavaScript -->
       </div>
     </div>
     
-    <!-- 漫画エディター画面 -->
+    <!-- Manga Editor Screen -->
     <div id="manga-editor-screen" class="screen">
     <div class="controls">
-        <button id="back-to-templates-btn" class="back-btn">戻る</button>
+        <button id="back-to-templates-btn" class="back-btn">Back</button>
         
       <div class="panel-selector">
-        <label for="panel-select">コマを選択:</label>
+        <label for="panel-select">Select Panel:</label>
         <select id="panel-select">
-            <option value="panel1">コマ1</option>
-            <option value="panel2">コマ2</option>
-            <option value="panel3">コマ3</option>
-            <option value="panel4">コマ4</option>
+            <option value="panel1">Panel 1</option>
+            <option value="panel2">Panel 2</option>
+            <option value="panel3">Panel 3</option>
+            <option value="panel4">Panel 4</option>
         </select>
       </div>
       
       <div class="image-selector">
-        <label for="image-select">画像を選択:</label>
+        <label for="image-select">Select Image:</label>
         <select id="image-select">
-          <option value="">画像なし</option>
+          <option value="">No image</option>
           <option value="1.png">1.png</option>
           <option value="2.png">2.png</option>
           <option value="3.png">3.png</option>
           <option value="4.png">4.png</option>
           <option value="5.png">5.png</option>
         </select>
-        <button id="apply-btn">適用</button>
-        <button id="reset-btn">リセット</button>
-        <button id="export-btn" class="export-btn">SVG保存</button>
-        <button id="export-svg-btn" style="background-color: #FF9800; display: none;">SVG保存</button>
+        <button id="apply-btn">Apply</button>
+        <button id="reset-btn">Reset</button>
+        <button id="export-btn" class="export-btn">Save SVG</button>
+        <button id="export-svg-btn" style="background-color: #FF9800; display: none;">Save SVG</button>
       </div>
     </div>
     
-      <!-- テンプレート情報 -->
+      <!-- Template Information -->
       <div class="template-header" id="template-header">
-        <h2>テンプレート名</h2>
-        <p>テンプレートの説明</p>
+        <h2>Template Name</h2>
+        <p>Template description</p>
       </div>
       
       <div class="manga-container" id="manga-container">
-        <!-- パネルはJavaScriptで動的に挿入されます -->
-    </div>
+        <!-- Panels will be dynamically inserted by JavaScript -->
+      </div>
     
     <div class="image-preview">
       <div class="preview-item">
@@ -635,6 +742,32 @@
   </div>
 
   <script>
+    // Theme toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
+      
+      // Check for saved user preference
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+      }
+      
+      // Toggle theme
+      themeToggle.addEventListener('click', function() {
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+          themeIcon.textContent = '🌙';
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+          themeIcon.textContent = '☀️';
+        }
+      });
+    });
+    
     // グローバル変数として必要なAPIを定義（ブラウザサポート用）
     window.createObjectURL = (window.URL || window.webkitURL || {}).createObjectURL || function(){};
     window.Blob = window.Blob || function(){};
@@ -662,22 +795,22 @@
           // 絶対URLをキャッシュに保存
           if (img.src.startsWith('http') || img.src.startsWith('data:')) {
             imageCache[src + '_fullpath'] = img.src;
-            console.log(`画像の絶対パスをキャッシュ: ${src} -> ${img.src}`);
+            console.log(`Image absolute path cached: ${src} -> ${img.src}`);
           }
         };
         
         img.onload = () => {
-          console.log(`画像プリロード完了: ${src}`);
+          console.log(`Image preload completed: ${src}`);
           saveFullPath();
         };
         
         img.onerror = () => {
-          console.error(`画像プリロード失敗: ${src}、相対パスを試します`);
-          // ローカルでの開発時のフォールバック
-          if (!img.src.startsWith('./')) {
+          console.warn('Failed to load image:', src);
+          // 失敗した場合は元のURLを返す
+          if (!src.startsWith('./')) {
             img.src = './' + src;
           } else {
-            console.error(`画像ロード最終失敗: ${src}`);
+            console.error(`Final image load failure: ${src}`);
           }
         };
         
@@ -686,7 +819,7 @@
           // Vercel環境では完全なURLを構築
           const baseUrl = window.location.origin;
           img.src = `${baseUrl}/${src}`;
-          console.log(`Vercel環境での画像パス: ${img.src}`);
+          console.log(`Vercel environment image path: ${img.src}`);
         } else {
           // ローカル環境など
           img.src = src;
@@ -723,10 +856,10 @@
           // テンプレート一覧を読み込む
           const response = await fetch('templates/templates.json');
           if (!response.ok) {
-            throw new Error('テンプレート一覧の読み込みに失敗しました');
+            throw new Error('Failed to load template list');
           }
           const templatesData = await response.json();
-          console.log('テンプレート一覧を読み込みました:', templatesData);
+          console.log('Templates loaded:', templatesData);
           
           // テンプレートカードを作成
           displayTemplateCards(templatesData);
@@ -734,17 +867,17 @@
           // 各テンプレートの詳細を読み込む
           await loadTemplateDefinitions(templatesData.templates);
           
-          console.log('全テンプレート定義の読み込みが完了しました');
+          console.log('All template definitions loaded successfully');
         } catch (error) {
-          console.error('テンプレートの読み込み中にエラーが発生しました:', error);
-          alert('テンプレートの読み込みに失敗しました。デフォルトのテンプレートを使用します。');
+          console.error('Error loading templates:', error);
+          alert('Failed to load templates. Using default template.');
           // デフォルトのテンプレートを使用
           const defaultTemplatesData = {
             "templates": [
               {
                 "id": "template1",
-                "title": "標準4コマ",
-                "description": "標準的な上下2段の4コマレイアウト",
+                "title": "Standard 4-Panel",
+                "description": "Standard layout with 2 rows of 2 panels",
                 "thumbnail": "thumbnails/template1.png"
               }
             ]
@@ -759,13 +892,13 @@
           try {
             const response = await fetch(`templates/${template.id}.json`);
             if (!response.ok) {
-              throw new Error(`テンプレート ${template.id} の読み込みに失敗しました`);
+              throw new Error(`Failed to load template ${template.id}`);
             }
             const templateData = await response.json();
             templateDefinitions[template.id] = templateData;
-            console.log(`テンプレート ${template.id} を読み込みました:`, templateData);
+            console.log(`Template ${template.id} loaded:`, templateData);
           } catch (error) {
-            console.error(`テンプレート ${template.id} の読み込み中にエラーが発生しました:`, error);
+            console.error(`Error loading template ${template.id}:`, error);
           }
         });
         
@@ -776,7 +909,7 @@
       // テンプレートカードを表示
       function displayTemplateCards(templatesData) {
         templateGrid.innerHTML = ''; // グリッドをクリア
-        console.log('テンプレート一覧を表示します');
+        console.log('Displaying template list');
         
         // テンプレートカードの作成
         templatesData.templates.forEach(template => {
@@ -803,12 +936,12 @@
           
           // テンプレートクリック時の処理
           templateCard.addEventListener('click', () => {
-            console.log('テンプレートカードがクリックされました:', template.id);
+            console.log('Template card clicked:', template.id);
             try {
               loadTemplateFromDefinition(template.id);
             } catch (error) {
-              console.error('テンプレート読み込み中にエラーが発生しました:', error);
-              alert('テンプレートの読み込みに失敗しました。デフォルトテンプレートを使用します。');
+              console.error('Error loading template:', error);
+              alert('Failed to load template. Using default template.');
               useDefaultTemplate();
             }
           });
@@ -822,11 +955,11 @@
 
       // インラインテンプレートから読み込む処理
       function loadTemplateFromDefinition(templateId) {
-        console.log('テンプレート読み込み開始:', templateId);
+        console.log('Loading template:', templateId);
         
         if (templateDefinitions[templateId]) {
           const template = templateDefinitions[templateId];
-          console.log('読み込んだテンプレート:', template);
+          console.log('Template loaded:', template);
           
           // テンプレートを保存
           currentTemplate = template;
@@ -888,8 +1021,8 @@
           templateSelectionScreen.style.display = 'none';
           mangaEditorScreen.style.display = 'block';
         } else {
-          console.error(`テンプレート ${templateId} が見つかりません`);
-          alert(`テンプレート ${templateId} が見つかりません。デフォルトテンプレートを使用します。`);
+          console.error(`Template ${templateId} not found`);
+          alert(`Template ${templateId} not found. Using default template.`);
           useDefaultTemplate();
         }
       }
@@ -900,11 +1033,11 @@
           // 標準的な4コマ漫画レイアウトのテンプレートをファイルから読み込む
           const response = await fetch('templates/template1.json');
           if (!response.ok) {
-            throw new Error('デフォルトテンプレートの読み込みに失敗しました');
+            throw new Error('Failed to load default template');
           }
           
           const defaultTemplateData = await response.json();
-          console.log('デフォルトテンプレートを読み込みました:', defaultTemplateData);
+          console.log('Default template loaded:', defaultTemplateData);
           
           // テンプレートを保存
           currentTemplate = defaultTemplateData;
@@ -966,12 +1099,12 @@
           templateSelectionScreen.style.display = 'none';
           mangaEditorScreen.style.display = 'block';
         } catch (error) {
-          console.error('デフォルトテンプレート読み込み中にエラーが発生しました:', error);
+          console.error('Error loading default template:', error);
           
           // ハードコードされたフォールバックテンプレート
           const fallbackTemplateData = {
-            title: "標準4コマ（フォールバック）",
-            description: "標準的な上下2段の4コマレイアウト",
+            title: "Standard 4-Panel (Fallback)",
+            description: "Standard layout with 2 rows of 2 panels",
             panels: [
               { id: "panel1", top: 0, left: 0, width: 50, height: 50 },
               { id: "panel2", top: 0, left: 50, width: 50, height: 50 },
@@ -1314,7 +1447,7 @@
                 };
                 
                 img.onerror = () => {
-                  console.warn('画像の読み込みに失敗:', url);
+                  console.warn('Failed to load image:', url);
                   // 失敗した場合は元のURLを返す
                   resolve(url);
                 };
@@ -1359,8 +1492,8 @@
           const loadingText = loadingOverlay.querySelector('.loading-text');
           const processStatus = loadingOverlay.querySelector('.process-status');
           
-          loadingText.textContent = 'SVG生成中...';
-          processStatus.textContent = '画像をBase64に変換しています...';
+          loadingText.textContent = 'Generating SVG...';
+          processStatus.textContent = 'Converting images to Base64...';
           
           // 非同期で画像変換とSVG生成を行う
           (async () => {
@@ -1386,7 +1519,7 @@
             
             // 全ての画像変換を待つ
             await Promise.all(imgProcessPromises);
-            processStatus.textContent = 'SVGパネル生成中...';
+            processStatus.textContent = 'Creating SVG panels...';
             
             // パネル情報を使ってSVG作成
             if (currentTemplate && currentTemplate.panels) {
@@ -1500,7 +1633,7 @@
               });
             }
             
-            processStatus.textContent = 'SVG生成完了';
+            processStatus.textContent = 'SVG generation complete';
             
             // SVGを文字列に変換
             const svgData = new XMLSerializer().serializeToString(svg);
@@ -1516,11 +1649,11 @@
             const filename = `${templateInfo.title}-${timestamp}.svg`;
             
             imgTest.innerHTML = `
-              <p style="margin:0 0 10px 0; font-size:14px;">SVGプレビュー (正しいSVG)</p>
+              <p style="margin:0 0 10px 0; font-size:14px;">SVG Preview (Correct SVG)</p>
               <img src="${svgUrl}" style="width:500px; height:500px; display:block; margin-bottom:10px; border:1px solid #ccc;" />
               <div style="display:flex; justify-content:space-between;">
-                <button id="download-svg-preview" style="padding:8px 15px; background:#4CAF50; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:bold;">このSVGをダウンロード</button>
-                <button id="close-svg-preview" style="padding:8px 15px; background:#f44336; color:white; border:none; border-radius:3px; cursor:pointer;">閉じる</button>
+                <button id="download-svg-preview" style="padding:8px 15px; background:#4CAF50; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:bold;">Download this SVG</button>
+                <button id="close-svg-preview" style="padding:8px 15px; background:#f44336; color:white; border:none; border-radius:3px; cursor:pointer;">Close</button>
               </div>
             `;
             
@@ -1546,10 +1679,10 @@
                 // URLを解放
                 setTimeout(() => URL.revokeObjectURL(url), 100);
                 
-                console.log('SVGファイルが保存されました');
+                console.log('SVG file saved');
               } catch (error) {
-                console.error('SVGダウンロード中にエラーが発生:', error);
-                alert('SVGのダウンロードに失敗しました: ' + error.message);
+                console.error('Error during SVG download:', error);
+                alert('Failed to download SVG: ' + error.message);
               }
             });
             
@@ -1562,8 +1695,8 @@
           })();
           
         } catch (error) {
-          console.error('SVG生成中にエラーが発生しました:', error);
-          alert('SVG生成中にエラーが発生しました: ' + error.message);
+          console.error('Error generating SVG:', error);
+          alert('Error generating SVG: ' + error.message);
           
           // エラー時もローディングを非表示
           const loadingOverlay = document.getElementById('loading-overlay');

@@ -1,6 +1,6 @@
 {
-  "title": "ダイナミックレイアウト",
-  "description": "左上に大きなコマと3つの小さなコマの組み合わせ",
+  "title": "Dynamic Layout",
+  "description": "Large panel in top-left combined with three smaller panels",
   "panels": [
     {
       "id": "panel1",

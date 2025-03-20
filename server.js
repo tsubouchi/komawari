@@ -8,19 +8,19 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// tmp ディレクトリが存在しない場合は作成
+// Create tmp directory if it doesn't exist
 const tmpDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, 'tmp');
 if (!fs.existsSync(tmpDir)) {
   fs.mkdirSync(tmpDir, { recursive: true });
 }
 
-// ミドルウェア設定
+// Middleware configuration
 app.use(express.static('.'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors());
 
-// multerの設定 - 一時ファイル保存用
+// Multer configuration - for temporary file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, tmpDir);
@@ -32,14 +32,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// ログミドルウェア
+// Logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// 一時ファイルを定期的にクリーンアップするスケジューラ
-// 24時間以上経過したファイルを削除
+// Scheduled temporary file cleanup
+// Delete files older than 24 hours
 setInterval(() => {
   try {
     const files = fs.readdirSync(tmpDir);
@@ -53,44 +53,44 @@ setInterval(() => {
       
       if (fileAge > oneDayMs) {
         fs.unlinkSync(filePath);
-        console.log(`古いファイルを削除しました: ${filePath}`);
+        console.log(`Deleted old file: ${filePath}`);
       }
     });
   } catch (error) {
-    console.error('ファイルクリーンアップ中にエラーが発生しました:', error);
+    console.error('Error during file cleanup:', error);
   }
-}, 60 * 60 * 1000); // 1時間ごとに実行
+}, 60 * 60 * 1000); // Run every hour
 
-// SVGファイル保存API
+// SVG file save API
 app.post('/api/save-svg', upload.single('svgFile'), (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'SVGファイルが必要です' });
+      return res.status(400).json({ error: 'SVG file is required' });
     }
     
     return res.json({
       success: true,
-      message: 'SVGファイルを保存しました',
+      message: 'SVG file saved successfully',
       filePath: req.file.path,
       fileName: req.file.filename
     });
   } catch (error) {
-    console.error('SVGファイル保存エラー:', error);
+    console.error('SVG file save error:', error);
     return res.status(500).json({ 
-      error: 'SVGファイルの保存に失敗しました', 
+      error: 'Failed to save SVG file', 
       details: error.message 
     });
   }
 });
 
-// Vercel用のサーバーレス関数対応
+// Vercel serverless function support
 if (process.env.VERCEL) {
-  // Vercel環境では、モジュールをエクスポート
+  // Export module for Vercel environment
   module.exports = app;
 } else {
-  // ローカル環境では、サーバーを起動
+  // Start server in local environment
   app.listen(PORT, () => {
-    console.log(`サーバーが起動しました: http://localhost:${PORT}`);
-    console.log('終了するには Ctrl+C を押してください');
+    console.log(`Server started: http://localhost:${PORT}`);
+    console.log('Press Ctrl+C to exit');
   });
 } 

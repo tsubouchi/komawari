@@ -1,34 +1,34 @@
 {
-  "title": "大小混合",
-  "description": "左側に大きなコマ、右側に3つの小さなコマ",
+  "title": "Mixed Size",
+  "description": "Large panel on the left, three smaller panels on the right",
   "panels": [
     {
       "id": "panel1",
       "top": 0,
       "left": 0,
-      "width": 60,
+      "width": 50,
       "height": 100
     },
     {
       "id": "panel2",
       "top": 0,
-      "left": 60,
-      "width": 40,
-      "height": 33
+      "left": 50,
+      "width": 50,
+      "height": 33.33
     },
     {
       "id": "panel3",
-      "top": 33,
-      "left": 60,
-      "width": 40,
-      "height": 33
+      "top": 33.33,
+      "left": 50,
+      "width": 50,
+      "height": 33.33
     },
     {
       "id": "panel4",
-      "top": 66,
-      "left": 60,
-      "width": 40,
-      "height": 34
+      "top": 66.66,
+      "left": 50,
+      "width": 50,
+      "height": 33.34
     }
   ]
 } 

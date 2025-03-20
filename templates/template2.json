@@ -1,6 +1,6 @@
 {
-  "title": "縦4コマ",
-  "description": "縦に並んだ伝統的な4コマレイアウト",
+  "title": "Vertical 4-Panel",
+  "description": "Traditional vertically aligned 4-panel layout",
   "panels": [
     {
       "id": "panel1",
